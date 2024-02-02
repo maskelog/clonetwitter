@@ -1,3 +1,4 @@
+import { useState } from "react";
 import styled from "styled-components";
 
 const Wrapper = styled.div``;
@@ -5,6 +6,11 @@ const Form = styled.form``;
 const Input = styled.input``;
 
 export default function CreateAccount(){
+  const [isLoading, setLoading] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  
   return (
     <Wrapper>
       <Form>
