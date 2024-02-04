@@ -57,22 +57,21 @@ export default function CreateAccount(){
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-
+    // create account
+    // set the name of the user.
+    // redirect to the home page
     } catch(e) {
       // setError
     }
     finally {
       setLoading(false);
     }
-    // create account
-    // set the name of the user.
-    // redirect to the home page
     console.log(name, email, password);
   }
   
   return (
     <Wrapper>
-      <Title>Login to 𝕏</Title>
+      <Title>Join 𝕏</Title>
       <Form onSubmit={onSubmit}>
         <Input onChange={onChage} name="name" value={name} placeholder="Name" type="text" required />
         <Input onChange={onChage} name="email" value={email} placeholder="Email" type="email" required />
