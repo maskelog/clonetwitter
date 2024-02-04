@@ -10,15 +10,43 @@ export default function CreateAccount(){
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const onChage = (e : React.ChangeEvent<HTMLInputElement>) => {
+    const {target: {name, value}} = e;
+    if(name === "name"){
+      setName(value)
+    } else if(name === "email") {
+      setEmail(value);
+    } else if (name === "password") {
+      setPassword(value);
+    }
+  };
+  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+
+    } catch(e) {
+      // setError
+    }
+    finally {
+      setLoading(false);
+    }
+    // create account
+    // set the name of the user.
+    // redirect to the home page
+    console.log(name, email, password);
+  }
   
   return (
     <Wrapper>
-      <Form>
-        <Input name="name" placeholder="Nmae" type="text" required />
-        <Input name="email" placeholder="Email" type="email" required />
-        <Input name="password" placeholder="password" type="password" required />
-        <Input name="password" placeholder="password" type="password" required />
-        <Input type="submit" value="Create Account" />
+      <title>Login to 𝕏</title>
+      <Form onSubmit={onSubmit}>
+        <Input onChange={onChage} name="name" value={name} placeholder="Nmae" type="text" required />
+        <Input onChange={onChage} name="email" value={email} placeholder="Email" type="email" required />
+        <Input onChange={onChage} name="password" value={password} placeholder="password" type="password" required />
+        <Input type="submit" value={isLoading ? "Loading..." : "Create Account"} />
       </Form>
   </Wrapper>
-);}
+);
+}
