@@ -10,7 +10,7 @@ import {
   Switcher,
   Title,
   Wrapper,
-} from "../components/auth-compoonents";
+} from "../components/auth-components";
 import GithubButton from "../components/github-btn";
 
 export default function CreateAccount() {
@@ -93,6 +93,9 @@ export default function CreateAccount() {
         />
       </Form>
       {error !== "" ? <Error>{error}</Error> : null}
+      <Switcher>
+        <Link to="/forgot-password">Forgot your password?</Link>
+      </Switcher>
       <Switcher>
         Already have an account? <Link to="/login">Log in &rarr;</Link>
       </Switcher>

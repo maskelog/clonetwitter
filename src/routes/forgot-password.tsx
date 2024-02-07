@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { auth } from "../firebase";
 import { Link, useNavigate } from "react-router-dom";
+import { sendPasswordResetEmail } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
-import { signInWithEmailAndPassword } from "firebase/auth";
 import {
   Form,
   Error,
@@ -13,31 +13,28 @@ import {
 } from "../components/auth-components";
 import GithubButton from "../components/github-btn";
 
-export default function CreateAccount() {
+export default function ForgotPassword() {
   const navigate = useNavigate();
   const [isLoading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const onChage = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const {
-      target: { name, value },
-    } = e;
-    if (name === "email") {
-      setEmail(value);
-    } else if (name === "password") {
-      setPassword(value);
-    }
+  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
   };
+
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (isLoading || email === "") {
+      setError("Please fill in your email.");
+      return;
+    }
     setError("");
-    if (isLoading || email === "" || password === "") return;
     try {
       setLoading(true);
-      await signInWithEmailAndPassword(auth, email, password);
-      navigate("/");
+      await sendPasswordResetEmail(auth, email);
+      alert("A password reset email has been sent to your email address.");
+      navigate("/login");
     } catch (e) {
       if (e instanceof FirebaseError) {
         setError(e.message);
@@ -45,15 +42,14 @@ export default function CreateAccount() {
     } finally {
       setLoading(false);
     }
-    console.log(name, email, password);
   };
 
   return (
     <Wrapper>
-      <Title>Login 𝕏</Title>
+      <Title>Reset Password</Title>
       <Form onSubmit={onSubmit}>
         <Input
-          onChange={onChage}
+          onChange={onChange}
           name="email"
           value={email}
           placeholder="Email"
@@ -61,22 +57,13 @@ export default function CreateAccount() {
           required
         />
         <Input
-          onChange={onChage}
-          name="password"
-          value={password}
-          placeholder="password"
-          type="password"
-          required
+          type="submit"
+          value={isLoading ? "Sending..." : "Send Reset Email"}
         />
-        <Input type="submit" value={isLoading ? "Loading..." : "Login"} />
       </Form>
-      {error !== "" ? <Error>{error}</Error> : null}
+      {error !== "" && <Error>{error}</Error>}
       <Switcher>
-        <Link to="/forgot-password">Forgot your password?</Link>
-      </Switcher>
-      <Switcher>
-        Don't have an account?{" "}
-        <Link to="/create-account">Create one &rarr;</Link>
+        <Link to="/login">Back to Login</Link>
       </Switcher>
       <GithubButton />
     </Wrapper>
