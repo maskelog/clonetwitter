@@ -1,7 +1,12 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import { getStorage, ref, uploadBytes } from "firebase/storage";
-import { addDoc, collection, getFirestore } from "firebase/firestore";
+import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
+import {
+  addDoc,
+  collection,
+  getFirestore,
+  updateDoc,
+} from "firebase/firestore";
 import { auth, db, storage } from "../firebase";
 
 const Form = styled.form`
@@ -90,14 +95,21 @@ export default function PostTweetForm() {
           storage,
           `tweets/${user.uid}-${user.displayName}/${doc.id}`
         );
-        await uploadBytes(locationRef, file);
+        const result = await uploadBytes(locationRef, file);
+        const url = await getDownloadURL(result.ref);
+        await updateDoc(doc, {
+          photo: url,
+        });
       }
+      setTweet("");
+      setFile(null);
     } catch (e) {
       console.log(e);
     } finally {
       setLoading(false);
     }
   };
+
   return (
     <Form onSubmit={onSubmit}>
       <TextArea
