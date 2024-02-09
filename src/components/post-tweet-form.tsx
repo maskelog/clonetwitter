@@ -73,8 +73,11 @@ export default function PostTweetForm() {
   };
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { files } = e.target;
-    if (files && files.length === 1) {
+    if (files && files.length === 1 && files[0].size <= 1024 * 1024) {
       setFile(files[0]);
+    } else if (files && files[0].size > 1024 * 1024) {
+      alert("File size should be 1MB or less");
+      e.target.value = "";
     }
   };
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
