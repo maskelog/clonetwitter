@@ -15,7 +15,7 @@ const Wrapper = styled.div`
   flex-direction: column;
   padding: 20px;
   border: 1px solid #333;
-  border-radius: 8px;
+  border-radius: 20px;
   margin-bottom: 20px;
   background-color: #000;
   color: #fff;
@@ -23,8 +23,8 @@ const Wrapper = styled.div`
 
 const TextArea = styled.textarea`
   padding: 10px;
-  border-radius: 15px;
-  border: 2px solid #1d9bf0;
+  border-radius: 20px;
+  border: 2px solid #fff;
   color: #fff;
   background: transparent;
   font-size: 14px;
@@ -63,7 +63,7 @@ const Button = styled.button`
   background-color: #1d9bf0;
   color: white;
   border: none;
-  padding: 10px 0px;
+  padding: 10px 10px;
   border-radius: 20px;
   font-size: 16px;
   cursor: pointer;
@@ -74,7 +74,7 @@ const Button = styled.button`
 
   &.edit,
   &.delete {
-    background-color: #007bff;
+    background-color: #1d9bf0;
     color: white;
   }
 
@@ -110,7 +110,7 @@ const MenuItem = styled.div`
   }
 
   &.edit {
-    background-color: #007bff;
+    background-color: #1d9bf0;
     border-radius: 8px 8px 0 0;
   }
 
@@ -118,6 +118,12 @@ const MenuItem = styled.div`
     background-color: tomato;
     border-radius: 0 0 8px 8px;
   }
+`;
+
+const ButtonsContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
 `;
 
 export default function Tweet({ id, userId, username, tweet, photo }: ITweet) {
@@ -177,16 +183,17 @@ export default function Tweet({ id, userId, username, tweet, photo }: ITweet) {
             value={editTweet}
             onChange={(e) => setEditTweet(e.target.value)}
           />
-          {/* "Change Photo" 버튼 추가 */}
-          <Button
-            className="edit"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            Change Photo
-          </Button>
-          <Button className="edit" onClick={handleEdit}>
-            Save
-          </Button>
+          <ButtonsContainer>
+            <Button
+              className="edit"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              Change Photo
+            </Button>
+            <Button className="edit" onClick={handleEdit}>
+              Save
+            </Button>
+          </ButtonsContainer>
           <input
             type="file"
             accept="image/*"
