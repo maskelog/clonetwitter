@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { deleteObject, ref } from "firebase/storage";
 import { auth, db, storage } from "../firebase";
+import { ITweet } from "./timeline";
 
 // Styled components
 const Wrapper = styled.div`
@@ -53,14 +54,35 @@ const EditButton = styled.button`
   cursor: pointer;
 `;
 
-// Props interface
-interface ITweet {
-  id: string;
-  userId: string;
-  username: string;
-  tweet: string;
-  photo?: string;
-}
+const Input = styled.input`
+  border: 2px solid #1d9bf0;
+  padding: 10px;
+  border-radius: 15px;
+  font-size: 16px;
+  color: black;
+  background-color: white;
+  margin-bottom: 10px;
+
+  &:focus {
+    outline: none;
+    border-color: #4a90e2;
+  }
+`;
+
+const SaveButton = styled.button`
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  font-size: 14px;
+  padding: 8px 15px;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+
+  &:hover {
+    background-color: #357abd;
+  }
+`;
 
 export default function Tweet({ id, userId, username, tweet, photo }: ITweet) {
   const user = auth.currentUser;
@@ -97,25 +119,22 @@ export default function Tweet({ id, userId, username, tweet, photo }: ITweet) {
         <Username>{username}</Username>
         <Payload>
           {isEditing ? (
-            <input
-              type="text"
-              value={editTweet}
-              onChange={(e) => setEditTweet(e.target.value)}
-            />
+            <>
+              <Input
+                type="text"
+                value={editTweet}
+                onChange={(e) => setEditTweet(e.target.value)}
+              />
+              <SaveButton onClick={onEdit}>Save</SaveButton>
+            </>
           ) : (
             tweet
           )}
         </Payload>
-        {user?.uid === userId && (
+        {user?.uid === userId && !isEditing && (
           <>
-            {isEditing ? (
-              <button onClick={onEdit}>Save</button>
-            ) : (
-              <>
-                <DeleteButton onClick={onDelete}>Delete</DeleteButton>
-                <EditButton onClick={() => setIsEditing(true)}>Edit</EditButton>
-              </>
-            )}
+            <DeleteButton onClick={onDelete}>Delete</DeleteButton>
+            <EditButton onClick={() => setIsEditing(true)}>Edit</EditButton>
           </>
         )}
       </Column>
