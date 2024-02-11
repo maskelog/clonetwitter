@@ -26,7 +26,7 @@ const TextArea = styled.textarea`
   border-radius: 15px;
   border: 2px solid #1d9bf0;
   color: #fff;
-  background-color: black;
+  background: transparent;
   font-size: 14px;
   height: 100px;
   resize: vertical;
@@ -60,27 +60,36 @@ const Payload = styled.p`
 `;
 
 const Button = styled.button`
-  padding: 6px 12px;
-  border-radius: 8px;
+  background-color: #1d9bf0;
+  color: white;
   border: none;
+  padding: 10px 0px;
+  border-radius: 20px;
+  font-size: 16px;
   cursor: pointer;
-  font-size: 14px;
-  margin-left: 8px;
-
-  &:hover {
-    opacity: 0.8;
+  &:hover,
+  &:active {
+    opacity: 0.9;
   }
 
   &.edit,
-  &.delete,
-  &.menu {
+  &.delete {
     background-color: #007bff;
     color: white;
   }
+
+  &.delete {
+    background-color: tomato;
+  }
+
+  &.menu {
+    background: transparent;
+    color: #ffffff;
+    font-size: 16px;
+  }
 `;
 
-const DropdownMenu = styled.div`
-  display: none;
+const DropdownMenu = styled.div<{ show: boolean }>`
   position: absolute;
   background-color: black;
   right: 0;
@@ -88,10 +97,7 @@ const DropdownMenu = styled.div`
   min-width: 120px;
   box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
   z-index: 1;
-
-  &.show {
-    display: block;
-  }
+  display: ${({ show }) => (show ? "block" : "none")};
 `;
 
 const MenuItem = styled.div`
@@ -115,60 +121,50 @@ const MenuItem = styled.div`
 `;
 
 export default function Tweet({ id, userId, username, tweet, photo }: ITweet) {
-  const user = auth.currentUser;
   const [showMenu, setShowMenu] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editTweet, setEditTweet] = useState(tweet);
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const toggleMenu = () => setShowMenu(!showMenu);
-
-  const onDelete = async () => {
-    const ok = window.confirm("Are you sure you want to delete this tweet?");
-    if (ok) {
+  // Event Handlers
+  const handleMenuToggle = () => setShowMenu(!showMenu);
+  const handleDelete = async () => {
+    if (window.confirm("Are you sure you want to delete this tweet?")) {
       await deleteDoc(doc(db, "tweets", id));
-      if (photo) {
-        await deleteObject(storageRef(storage, photo));
-      }
+      photo && (await deleteObject(storageRef(storage, photo)));
     }
   };
 
-  const onEdit = async () => {
-    setIsEditing(false);
+  const handleEdit = async () => {
     await updateDoc(doc(db, "tweets", id), { tweet: editTweet });
+    isEditing && fileInputRef.current?.click();
+    setIsEditing(false);
   };
 
-  const onImageChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const fileRef = storageRef(storage, `tweets/${id}/photo`);
-    await uploadBytes(fileRef, file);
-    const photoURL = await getDownloadURL(fileRef);
-
-    await updateDoc(doc(db, "tweets", id), { photo: photoURL });
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const fileRef = storageRef(storage, `tweets/${id}/photo`);
+      const uploadResult = await uploadBytes(fileRef, file);
+      const photoURL = await getDownloadURL(uploadResult.ref);
+      await updateDoc(doc(db, "tweets", id), { photo: photoURL });
+    }
   };
 
   return (
     <Wrapper>
       <Column>
         <Username>{username}</Username>
-        {user?.uid === userId && (
+        {auth.currentUser?.uid === userId && (
           <>
-            <Button className="menu" onClick={toggleMenu}>
+            <Button className="menu" onClick={handleMenuToggle}>
               ⋮
             </Button>
-            <DropdownMenu className={showMenu ? "show" : ""}>
-              <MenuItem
-                className="edit"
-                onClick={() => {
-                  setIsEditing(true);
-                  setShowMenu(false);
-                }}
-              >
+            <DropdownMenu show={showMenu}>
+              <MenuItem className="edit" onClick={() => setIsEditing(true)}>
                 Edit
               </MenuItem>
-              <MenuItem className="delete" onClick={onDelete}>
+              <MenuItem className="delete" onClick={handleDelete}>
                 Delete
               </MenuItem>
             </DropdownMenu>
@@ -181,24 +177,34 @@ export default function Tweet({ id, userId, username, tweet, photo }: ITweet) {
             value={editTweet}
             onChange={(e) => setEditTweet(e.target.value)}
           />
-          <Button className="edit" onClick={() => fileInputRef.current.click()}>
+          {/* "Change Photo" 버튼 추가 */}
+          <Button
+            className="edit"
+            onClick={() => fileInputRef.current?.click()}
+          >
             Change Photo
           </Button>
-          <Button className="edit" onClick={onEdit}>
+          <Button className="edit" onClick={handleEdit}>
             Save
           </Button>
           <input
-            ref={fileInputRef}
             type="file"
             accept="image/*"
-            onChange={onImageChange}
+            ref={fileInputRef}
+            onChange={handleImageChange}
             style={{ display: "none" }}
           />
         </>
       ) : (
         <Payload>{tweet}</Payload>
       )}
-      {photo && <Photo src={photo} alt="Tweet" />}
+      {photo && (
+        <Photo
+          src={photo}
+          alt="Tweet"
+          onClick={() => window.open(photo, "_blank")}
+        />
+      )}
     </Wrapper>
   );
 }
