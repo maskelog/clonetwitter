@@ -20,6 +20,7 @@ const Wrapper = styled.div`
   flex-direction: column;
   gap: 20px;
 `;
+
 const AvatarUpload = styled.label`
   width: 80px;
   height: 80px;
@@ -30,13 +31,23 @@ const AvatarUpload = styled.label`
   justify-content: center;
   align-items: center;
   overflow: hidden;
+  position: relative;
   svg {
-    width: 50px;
+    width: 100px;
+    height: 100px;
   }
 `;
+
 const AvatarImg = styled.img`
   width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  position: absolute;
+  top: 0;
+  left: 0;
 `;
+
 const AvatarInput = styled.input`
   display: none;
 `;
