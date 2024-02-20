@@ -12,6 +12,7 @@ import { auth } from "./firebase";
 import styled from "styled-components";
 import ProtectedRoute from "./components/protected-route";
 import ForgotPassword from "./routes/forgot-password";
+import ChatRoom from "./components/ChatMessage";
 
 const router = createBrowserRouter([
   {
@@ -29,6 +30,10 @@ const router = createBrowserRouter([
       {
         path: "profile",
         element: <Profile />,
+      },
+      {
+        path: "/chat/:userId",
+        element: <ChatRoom />,
       },
     ],
   },

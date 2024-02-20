@@ -9,6 +9,7 @@ import {
 import { deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { auth, db, storage } from "../firebase";
 import { ITweet } from "./timeline";
+import { useNavigate } from "react-router-dom";
 
 const Wrapper = styled.div`
   display: flex;
@@ -157,10 +158,16 @@ export default function Tweet({ id, userId, username, tweet, photo }: ITweet) {
     }
   };
 
+  const navigate = useNavigate();
+
+  const handleUsernameClick = () => {
+    navigate(`/chat/${userId}`);
+  };
+
   return (
     <Wrapper>
       <Column>
-        <Username>{username}</Username>
+        <Username onClick={handleUsernameClick}>{username}</Username>
         {auth.currentUser?.uid === userId && (
           <>
             <Button className="menu" onClick={handleMenuToggle}>
