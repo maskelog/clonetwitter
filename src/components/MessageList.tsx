@@ -4,13 +4,15 @@ import { db } from "../firebase";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import MessageItem from "./MessageItem";
 
-interface IMessage {
+// IMessage 인터페이스 수정: username 속성 추가
+export interface IMessage {
   id: string;
   text: string;
-  createdAt: Date;
+  createdAt: number;
   senderId: string;
   senderName?: string;
   senderPhotoURL?: string;
+  username?: string; // 사용자 이름 속성 추가
 }
 
 const GlobalStyles = createGlobalStyle`
@@ -25,7 +27,7 @@ const GlobalStyles = createGlobalStyle`
 
 const Wrapper = styled.div`
   display: flex;
-  height: 100vh;
+  height: 90vh;
   width: 100%;
 `;
 
@@ -49,15 +51,15 @@ const MessageList = () => {
 
   useEffect(() => {
     const q = query(collection(db, "messages"), orderBy("createdAt", "asc"));
-
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const messagesArray: IMessage[] = snapshot.docs.map((doc) => ({
         id: doc.id,
-        text: doc.data().text,
-        createdAt: doc.data().createdAt.toDate(),
-        senderId: doc.data().senderId,
-        senderName: doc.data().senderName,
-        senderPhotoURL: doc.data().senderPhotoURL,
+        text: doc.data().text || "",
+        createdAt: doc.data().createdAt || 0,
+        senderId: doc.data().senderId || "",
+        senderName: doc.data().senderName || "",
+        senderPhotoURL: doc.data().senderPhotoURL || "",
+        username: doc.data().username || "Anonymous", // username 속성 불러오기
       }));
       setMessages(messagesArray);
       scrollToBottom();
@@ -67,22 +69,18 @@ const MessageList = () => {
   }, []);
 
   return (
-    <MessagesContainer>
-      {messages.map((message) => (
-        <MessageItem key={message.id} message={message} />
-      ))}
-      <div ref={messagesEndRef} />
-    </MessagesContainer>
-  );
-};
-
-export default function ChatRoom() {
-  return (
     <>
       <GlobalStyles />
       <Wrapper>
-        <MessageList />
+        <MessagesContainer>
+          {messages.map((message) => (
+            <MessageItem key={message.id} {...message} />
+          ))}
+          <div ref={messagesEndRef} />
+        </MessagesContainer>
       </Wrapper>
     </>
   );
-}
+};
+
+export default MessageList;

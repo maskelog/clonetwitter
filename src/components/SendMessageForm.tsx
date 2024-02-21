@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import { addDoc, collection, updateDoc } from "firebase/firestore";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { auth, db, storage } from "../firebase";
 
 const Form = styled.form`
@@ -79,21 +79,23 @@ export default function SendMessageForm() {
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const user = auth.currentUser;
-    if (!user || isLoading || message === "") return;
+    if (!user || isLoading || message.trim() === "") return;
 
     try {
       setLoading(true);
       const docRef = await addDoc(collection(db, "messages"), {
         text: message,
-        createdAt: Date.now(),
+        createdAt: serverTimestamp(),
         senderId: user.uid,
+        username: user.displayName || "Anonymous", // 현재 사용자의 username 추가
       });
+
       if (file) {
         const fileRef = ref(storage, `messages/${docRef.id}`);
         const uploadResult = await uploadBytes(fileRef, file);
         const fileUrl = await getDownloadURL(uploadResult.ref);
         await updateDoc(docRef, {
-          imageUrl: fileUrl,
+          imageUrl: fileUrl, // 이미지 URL을 문서에 추가
         });
       }
       setMessage("");
@@ -114,31 +116,16 @@ export default function SendMessageForm() {
         placeholder="Type your message here..."
         required
       />
-      <AttachFileButton htmlFor="file">
-        <svg
-          fill="none"
-          strokeWidth={1.5}
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true"
-          width="24"
-          height="24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
-          />
-        </svg>
-      </AttachFileButton>
+      <AttachFileButton htmlFor="file">Add photo</AttachFileButton>
       <AttachFileInput
         onChange={onFileChange}
         type="file"
         id="file"
         accept="image/*"
       />
-      <SubmitBtn type="submit" value={isLoading ? "Sending..." : "Send"} />
+      <SubmitBtn disabled={isLoading}>
+        {isLoading ? "Sending..." : "Send"}
+      </SubmitBtn>
     </Form>
   );
 }
