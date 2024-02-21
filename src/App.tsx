@@ -12,7 +12,7 @@ import { auth } from "./firebase";
 import styled from "styled-components";
 import ProtectedRoute from "./components/protected-route";
 import ForgotPassword from "./routes/forgot-password";
-import ChatRoom from "./components/ChatMessage";
+import ChatPage from "./routes/chat-page";
 
 const router = createBrowserRouter([
   {
@@ -31,10 +31,6 @@ const router = createBrowserRouter([
         path: "profile",
         element: <Profile />,
       },
-      {
-        path: "/chat/:userId",
-        element: <ChatRoom />,
-      },
     ],
   },
   {
@@ -48,6 +44,10 @@ const router = createBrowserRouter([
   {
     path: "/forgot-password",
     element: <ForgotPassword />,
+  },
+  {
+    path: "/chat/:userID",
+    element: <ChatPage />,
   },
 ]);
 
@@ -68,6 +68,7 @@ const Wrapper = styled.div`
   display: flex;
   justify-content: center;
 `;
+
 function App() {
   const [isLoading, setLoading] = useState(true);
   const init = async () => {
