@@ -1,7 +1,12 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  serverTimestamp,
+  updateDoc,
+} from "firebase/firestore";
 import { auth, db, storage } from "../firebase";
 
 const Form = styled.form`
@@ -87,7 +92,7 @@ export default function SendMessageForm() {
         text: message,
         createdAt: serverTimestamp(),
         senderId: user.uid,
-        username: user.displayName || "Anonymous", // 현재 사용자의 username 추가
+        username: user.displayName || "Anonymous",
       });
 
       if (file) {

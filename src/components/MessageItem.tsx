@@ -36,13 +36,11 @@ const MessageBubble = styled.div<{ isSentByCurrentUser: boolean }>`
   color: #333;
 `;
 
-const Timestamp = styled.span<{ isSentByCurrentUser: boolean }>`
+const Timestamp = styled.span`
   font-size: 0.75em;
   color: #666;
   display: block;
   margin-top: 5px;
-  text-align: ${({ isSentByCurrentUser }) =>
-    isSentByCurrentUser ? "right" : "left"};
 `;
 
 const MessageItem: React.FC<IMessageItemProps> = ({
@@ -50,11 +48,11 @@ const MessageItem: React.FC<IMessageItemProps> = ({
   createdAt,
   senderId,
   username,
-  isSentByCurrentUser,
+  currentUserId,
 }) => {
-  // 날짜 포맷팅 함수 수정
+  const isSentByCurrentUser = senderId === currentUserId;
+
   const formatTime = (timestamp: number) => {
-    // 숫자 타입의 timestamp를 사용하여 Date 객체 생성
     const date = new Date(timestamp);
     return date.toLocaleTimeString("en-US", {
       hour: "2-digit",
@@ -68,7 +66,9 @@ const MessageItem: React.FC<IMessageItemProps> = ({
       <UserInfoText>{username}</UserInfoText>
       <MessageBubble isSentByCurrentUser={isSentByCurrentUser}>
         {text}
-        <Timestamp isSentByCurrentUser={isSentByCurrentUser}>
+        <Timestamp
+          style={{ textAlign: isSentByCurrentUser ? "right" : "left" }}
+        >
           {formatTime(createdAt)}
         </Timestamp>
       </MessageBubble>
