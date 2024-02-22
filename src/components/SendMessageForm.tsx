@@ -62,16 +62,16 @@ const SubmitBtn = styled.button`
   }
 `;
 
-export default function SendMessageForm() {
+export default function SendMessageForm({ chatId }) {
   const [isLoading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [file, setFile] = useState<File | null>(null);
 
-  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onChange = (e) => {
     setMessage(e.target.value);
   };
 
-  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onFileChange = (e) => {
     const { files } = e.target;
     if (files && files.length === 1 && files[0].size <= 1024 * 1024) {
       setFile(files[0]);
@@ -81,10 +81,10 @@ export default function SendMessageForm() {
     }
   };
 
-  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
     const user = auth.currentUser;
-    if (!user || isLoading || message.trim() === "") return;
+    if (!user || isLoading || message.trim() === "" || !chatId) return;
 
     try {
       setLoading(true);
@@ -93,6 +93,7 @@ export default function SendMessageForm() {
         createdAt: serverTimestamp(),
         senderId: user.uid,
         username: user.displayName || "Anonymous",
+        chatId,
       });
 
       if (file) {
@@ -100,7 +101,7 @@ export default function SendMessageForm() {
         const uploadResult = await uploadBytes(fileRef, file);
         const fileUrl = await getDownloadURL(uploadResult.ref);
         await updateDoc(docRef, {
-          imageUrl: fileUrl, // 이미지 URL을 문서에 추가
+          imageUrl: fileUrl,
         });
       }
       setMessage("");

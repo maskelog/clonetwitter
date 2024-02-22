@@ -6,24 +6,23 @@ interface IMessageItemProps {
   text: string;
   createdAt: number;
   senderId: string;
-  senderName?: string;
-  senderPhotoURL?: string;
   username: string;
   currentUserId: string;
+  senderPhotoURL?: string;
 }
 
 const MessageContainer = styled.div<{ isSentByCurrentUser: boolean }>`
   display: flex;
-  flex-direction: column;
-  align-items: ${({ isSentByCurrentUser }) =>
-    isSentByCurrentUser ? "flex-end" : "flex-start"};
+  flex-direction: ${({ isSentByCurrentUser }) =>
+    isSentByCurrentUser ? "row-reverse" : "row"};
+  align-items: flex-end;
   margin: 5px;
 `;
 
 const UserInfoText = styled.div`
   font-size: 0.75em;
   color: #888;
-  margin-bottom: 2px;
+  margin: 0 8px;
 `;
 
 const MessageBubble = styled.div<{ isSentByCurrentUser: boolean }>`
@@ -39,8 +38,13 @@ const MessageBubble = styled.div<{ isSentByCurrentUser: boolean }>`
 const Timestamp = styled.span`
   font-size: 0.75em;
   color: #666;
-  display: block;
   margin-top: 5px;
+`;
+
+const ProfileImage = styled.img`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
 `;
 
 const MessageItem: React.FC<IMessageItemProps> = ({
@@ -49,9 +53,9 @@ const MessageItem: React.FC<IMessageItemProps> = ({
   senderId,
   username,
   currentUserId,
+  senderPhotoURL,
 }) => {
   const isSentByCurrentUser = senderId === currentUserId;
-
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString("en-US", {
@@ -63,15 +67,14 @@ const MessageItem: React.FC<IMessageItemProps> = ({
 
   return (
     <MessageContainer isSentByCurrentUser={isSentByCurrentUser}>
-      <UserInfoText>{username}</UserInfoText>
-      <MessageBubble isSentByCurrentUser={isSentByCurrentUser}>
-        {text}
-        <Timestamp
-          style={{ textAlign: isSentByCurrentUser ? "right" : "left" }}
-        >
-          {formatTime(createdAt)}
-        </Timestamp>
-      </MessageBubble>
+      <ProfileImage src={senderPhotoURL || "defaultAvatarUrl"} alt="profile" />
+      <div>
+        <UserInfoText>{username}</UserInfoText>
+        <MessageBubble isSentByCurrentUser={isSentByCurrentUser}>
+          {text}
+          <Timestamp>{formatTime(createdAt)}</Timestamp>
+        </MessageBubble>
+      </div>
     </MessageContainer>
   );
 };

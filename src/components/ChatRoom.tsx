@@ -1,41 +1,120 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import MessageList from "./MessageList";
-import SendMessageForm from "./SendMessageForm";
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  addDoc,
+} from "firebase/firestore";
+import { db } from "../firebase";
+import ChatMessage from "./ChatMessage";
 
-const ChatContainer = styled.div`
+const ChatLayout = styled.div`
   display: flex;
-  flex-direction: row;
-  width: 100%;
-  max-width: 100%;
-  background-color: #121212;
-  color: #fff;
+  width: 100vw;
+  height: 100vh;
+  margin: 0 auto;
+  border-radius: 0;
   overflow: hidden;
 `;
 
-const ChatSidebar = styled.div`
-  flex: 1;
-  max-width: 300px;
-  border-right: 1px solid #333;
-  overflow-y: auto;
-  width: 100%;
+const ChatContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  height: 100%;
+  background-color: #f0f0f0;
+  overflow: hidden;
 `;
 
-const ChatMain = styled.div`
-  flex: 3;
+const MessagesList = styled.div`
+  flex-grow: 1;
   overflow-y: auto;
-  width: 100%;
+  padding: 20px;
+  background-color: white;
 `;
 
-const ChatRoom = () => {
+const MessageForm = styled.form`
+  display: flex;
+  padding: 10px;
+  background-color: #eee;
+`;
+
+const Input = styled.input`
+  flex-grow: 1;
+  margin-right: 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+`;
+
+const Button = styled.button`
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #0056b3;
+  }
+`;
+
+const ChatRoom = ({ userId }) => {
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState("");
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const messagesRef = collection(db, "messages");
+    const q = query(messagesRef, where("chatId", "==", userId));
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const messages = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setMessages(messages);
+    });
+
+    return () => unsubscribe();
+  }, [userId]);
+
+  const handleSend = async (e) => {
+    e.preventDefault();
+
+    if (newMessage.trim() === "") return;
+
+    await addDoc(collection(db, "messages"), {
+      text: newMessage,
+      createdAt: new Date(),
+      chatId: userId,
+    });
+
+    setNewMessage("");
+  };
+
   return (
-    <ChatContainer>
-      <ChatSidebar>{/* 사이드바 컴포넌트 또는 콘텐츠 */}</ChatSidebar>
-      <ChatMain>
-        <MessageList />
-        <SendMessageForm />
-      </ChatMain>
-    </ChatContainer>
+    <ChatLayout>
+      <ChatContainer>
+        <MessagesList>
+          {messages.map((msg) => (
+            <ChatMessage key={msg.id} message={msg} />
+          ))}
+        </MessagesList>
+        <MessageForm onSubmit={handleSend}>
+          <Input
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder="메시지를 입력하세요"
+          />
+          <Button type="submit">보내기</Button>
+        </MessageForm>
+      </ChatContainer>
+    </ChatLayout>
   );
 };
 
