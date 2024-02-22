@@ -73,11 +73,12 @@ const ChatRoom = ({ userId }) => {
     const q = query(messagesRef, where("chatId", "==", userId));
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const messages = querySnapshot.docs.map((doc) => ({
+      const fetchedMessages = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
-      setMessages(messages);
+      console.log("Fetched Messages:", fetchedMessages); // Debug log to check fetched messages
+      setMessages(fetchedMessages);
     });
 
     return () => unsubscribe();
