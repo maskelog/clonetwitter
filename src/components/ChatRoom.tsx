@@ -89,7 +89,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
         const data = doc.data();
         const createdAt =
           data.createdAt?.toDate().toLocaleString() || "Unknown date";
-        const isSentByCurrentUser = data.userId === userId;
+        const isSentByCurrentUser = data.userId === auth.currentUser?.uid;
         return {
           id: doc.id,
           ...data,
