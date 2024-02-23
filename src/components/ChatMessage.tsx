@@ -38,11 +38,6 @@ const Avatar = styled.div`
   }
 `;
 
-const Nickname = styled.span`
-  font-weight: bold;
-  margin-right: 10px;
-`;
-
 interface ChatMessageProps {
   message: {
     text: string;
@@ -95,7 +90,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         )}
       </Avatar>
       <MessageBubble isSentByCurrentUser={message.isSentByCurrentUser}>
-        <Nickname>{message.username}</Nickname>
         {message.text}
       </MessageBubble>
     </MessageContainer>
