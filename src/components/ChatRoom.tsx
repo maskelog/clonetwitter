@@ -8,7 +8,7 @@ import {
   addDoc,
   orderBy,
 } from "firebase/firestore";
-import { db } from "../firebase";
+import { auth, db } from "../firebase";
 import ChatMessage from "./ChatMessage";
 
 const ChatLayout = styled.div`
@@ -89,7 +89,6 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
         const data = doc.data();
         const createdAt =
           data.createdAt?.toDate().toLocaleString() || "Unknown date";
-        // 현재 로그인한 사용자와 메시지를 보낸 사용자의 ID를 비교하여 boolean 값 설정
         const isSentByCurrentUser = data.userId === userId;
         return {
           id: doc.id,
@@ -107,14 +106,14 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
   const handleSend = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (newMessage.trim() === "") return;
+    const currentUserId = auth.currentUser?.uid;
+    if (!currentUserId || newMessage.trim() === "") return;
 
-    // 메시지 저장 시 현재 로그인한 사용자의 ID를 사용
     await addDoc(collection(db, "messages"), {
       text: newMessage,
       createdAt: new Date(),
-      chatId: userId, // 채팅방 ID, 현재 예제에서는 모든 메시지에 동일
-      userId: userId, // 현재 로그인한 사용자의 ID
+      chatId: userId,
+      userId: currentUserId,
     });
 
     setNewMessage("");
