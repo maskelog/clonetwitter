@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { FormEvent, useEffect, useState } from "react";
 import styled from "styled-components";
 import {
   collection,
@@ -6,6 +6,7 @@ import {
   where,
   onSnapshot,
   addDoc,
+  orderBy,
 } from "firebase/firestore";
 import { db } from "../firebase";
 import ChatMessage from "./ChatMessage";
@@ -15,17 +16,13 @@ const ChatLayout = styled.div`
   width: 100vw;
   height: 100vh;
   margin: 0 auto;
-  border-radius: 0;
   overflow: hidden;
 `;
 
 const ChatContainer = styled.div`
-  display: flex;
   flex-direction: column;
   flex-grow: 1;
-  height: 100%;
   background-color: #f0f0f0;
-  overflow: hidden;
 `;
 
 const MessagesList = styled.div`
@@ -50,10 +47,8 @@ const Input = styled.input`
 `;
 
 const Button = styled.button`
-  padding: 10px 20px;
   background-color: #007bff;
   color: white;
-  border: none;
   border-radius: 4px;
   cursor: pointer;
 
@@ -62,37 +57,57 @@ const Button = styled.button`
   }
 `;
 
-const ChatRoom = ({ userId }) => {
-  const [messages, setMessages] = useState([]);
+interface IMessage {
+  id: string;
+  text: string;
+  userId: string;
+  username: string;
+  createdAt: { seconds: number; nanoseconds: number };
+  isSentByCurrentUser: boolean;
+}
+
+interface ChatRoomProps {
+  userId: string;
+}
+
+const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
+  const [messages, setMessages] = useState<IMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
 
   useEffect(() => {
     if (!userId) return;
 
-    const messagesRef = collection(db, "messages");
-    const q = query(messagesRef, where("chatId", "==", userId));
-
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const fetchedMessages = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      console.log("Fetched Messages:", fetchedMessages); // Debug log to check fetched messages
+    const q = query(
+      collection(db, "messages"),
+      where("chatId", "==", userId),
+      orderBy("createdAt", "asc")
+    );
+    return onSnapshot(q, (querySnapshot) => {
+      const fetchedMessages = querySnapshot.docs.map((doc) => {
+        const data = doc.data();
+        const createdAt =
+          data.createdAt?.toDate().toLocaleString() || "Unknown date";
+        return {
+          id: doc.id,
+          ...data,
+          createdAt,
+          isSentByCurrentUser: data.userId === userId,
+        };
+      });
       setMessages(fetchedMessages);
+      console.log("Fetched Messages:", fetchedMessages);
     });
-
-    return () => unsubscribe();
   }, [userId]);
 
-  const handleSend = async (e) => {
+  const handleSend = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     if (newMessage.trim() === "") return;
 
     await addDoc(collection(db, "messages"), {
       text: newMessage,
       createdAt: new Date(),
       chatId: userId,
+      userId,
     });
 
     setNewMessage("");
