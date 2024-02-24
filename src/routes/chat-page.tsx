@@ -55,7 +55,6 @@ const RoomLink = styled(Link)`
 const ChatPage = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const [rooms, setRooms] = useState<DocumentData[]>([]);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchRooms = async () => {
@@ -94,7 +93,7 @@ const ChatPage = () => {
         <ChatRoomsList>
           {rooms.map((room: DocumentData) => (
             <RoomLink key={room.id} to={`/chat/${room.chatId}`}>
-              {room.text || "No messages yet"}
+              {room.username || "Unknown"}: {room.text || "No messages yet"}
             </RoomLink>
           ))}
         </ChatRoomsList>

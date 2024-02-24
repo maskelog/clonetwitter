@@ -128,14 +128,17 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
   const handleSend = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const currentUserId = auth.currentUser?.uid;
-    if (!currentUserId || newMessage.trim() === "") return;
+    const currentUser = auth.currentUser;
+    if (!currentUser || newMessage.trim() === "") return;
+
+    const username = currentUser.displayName || "Anonymous";
 
     await addDoc(collection(db, "messages"), {
       text: newMessage,
       createdAt: new Date(),
       chatId: userId,
-      userId: currentUserId,
+      userId: currentUser.uid,
+      username,
     });
 
     setNewMessage("");

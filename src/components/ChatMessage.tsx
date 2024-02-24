@@ -14,9 +14,10 @@ const MessageContainer = styled.div<{ isSentByCurrentUser: boolean }>`
 
 const MessageContent = styled.div<{ isSentByCurrentUser: boolean }>`
   display: flex;
-  align-items: center;
   flex-direction: ${({ isSentByCurrentUser }) =>
     isSentByCurrentUser ? "row-reverse" : "row"};
+  align-items: ${({ isSentByCurrentUser }) =>
+    isSentByCurrentUser ? "flex-end" : "flex-start"};
 `;
 
 const MessageBubble = styled.div<{ isSentByCurrentUser: boolean }>`
@@ -26,6 +27,22 @@ const MessageBubble = styled.div<{ isSentByCurrentUser: boolean }>`
   padding: 10px 20px;
   color: #333;
   margin: 0 10px;
+  align-self: ${({ isSentByCurrentUser }) =>
+    isSentByCurrentUser ? "flex-end" : "flex-start"};
+`;
+
+const Username = styled.span`
+  font-size: 14px;
+  color: #555;
+  margin: 5px 10px;
+`;
+
+const UserInfoContainer = styled.div<{ isSentByCurrentUser: boolean }>`
+  display: ${({ isSentByCurrentUser }) =>
+    isSentByCurrentUser ? "none" : "flex"};
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 5px;
 `;
 
 const Avatar = styled.div<{ isSentByCurrentUser: boolean }>`
@@ -45,7 +62,10 @@ const Avatar = styled.div<{ isSentByCurrentUser: boolean }>`
   }
 `;
 
-const Timestamp = styled.span`
+const Timestamp = styled.div<{ isSentByCurrentUser: boolean }>`
+  align-self: ${({ isSentByCurrentUser }) =>
+    isSentByCurrentUser ? "flex-end" : "flex-start"};
+  margin-top: auto;
   font-size: 12px;
   color: #666;
   margin-top: 5px;
@@ -73,7 +93,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
           setAvatarUrl(url);
         } catch (error) {
           console.log("Avatar image not found or error fetching:", error);
-          // 에러 발생 시 기본 아바타 설정은 필요 없음, useState의 초기값이 이를 처리
         }
       }
     };
@@ -83,15 +102,20 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
 
   return (
     <MessageContainer isSentByCurrentUser={message.isSentByCurrentUser}>
-      <MessageContent isSentByCurrentUser={message.isSentByCurrentUser}>
+      <UserInfoContainer isSentByCurrentUser={message.isSentByCurrentUser}>
         <Avatar isSentByCurrentUser={message.isSentByCurrentUser}>
-          <img src={avatarUrl || defaultAvatar} alt="User avatar" />
+          <img src={avatarUrl} alt="User avatar" />
         </Avatar>
+        <Username>{message.username}</Username>
+      </UserInfoContainer>
+      <MessageContent isSentByCurrentUser={message.isSentByCurrentUser}>
         <MessageBubble isSentByCurrentUser={message.isSentByCurrentUser}>
           {message.text}
         </MessageBubble>
+        <Timestamp isSentByCurrentUser={message.isSentByCurrentUser}>
+          {message.createdAt}
+        </Timestamp>
       </MessageContent>
-      <Timestamp>{message.createdAt}</Timestamp>
     </MessageContainer>
   );
 };
