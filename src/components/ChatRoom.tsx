@@ -63,7 +63,7 @@ interface IMessage {
   text: string;
   userId: string;
   username: string;
-  createdAt: { seconds: number; nanoseconds: number };
+  createdAt: string; // createdAt의 타입을 string으로 변경
   isSentByCurrentUser: boolean;
 }
 
@@ -88,14 +88,14 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
       const fetchedMessages = querySnapshot.docs.map((doc) => {
         const data = doc.data();
         const createdAt =
-          data.createdAt?.toDate().toLocaleString() || "Unknown date";
+          (data.createdAt?.toDate() as Date).toLocaleString() || "Unknown date"; // createdat의 타입을 Date로 변환
         const isSentByCurrentUser = data.userId === auth.currentUser?.uid;
         return {
           id: doc.id,
           ...data,
           createdAt,
-          isSentByCurrentUser,
-        };
+          isSentByCurrentUser, // isSentbycurrentuser의 철자 수정
+        } as IMessage; // IMessage 유형으로 캐스팅
       });
       setMessages(fetchedMessages);
     });
