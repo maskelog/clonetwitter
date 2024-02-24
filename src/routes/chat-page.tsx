@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
   collection,
@@ -13,22 +13,49 @@ import ChatRoom from "../components/ChatRoom";
 
 const ChatPageLayout = styled.div`
   display: flex;
-  flex-direction: column;
   height: 100vh;
 `;
 
 const ChatRoomsList = styled.div`
-  padding: 20px;
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+  max-height: 80%;
+  border-right: 1px solid #ccc;
+  font-size: 20px;
+`;
+
+const ChatRoomContainer = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
 `;
 
 const RoomLink = styled(Link)`
-  display: block;
+  display: flex;
+  align-items: center;
+  width: 100%;
   margin-bottom: 10px;
+  padding: 10px;
+  text-decoration: none;
+  color: white;
+  transition: background-color 0.3s;
+  border-radius: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &:hover {
+    background-color: #f0f0f0;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+  }
 `;
 
 const ChatPage = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const [rooms, setRooms] = useState<DocumentData[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchRooms = async () => {
@@ -63,14 +90,20 @@ const ChatPage = () => {
 
   return (
     <ChatPageLayout>
-      <ChatRoomsList>
-        {rooms.map((room: DocumentData) => (
-          <RoomLink key={room.id} to={`/chat/${room.chatId}`}>
-            {room.text || "No messages yet"}
-          </RoomLink>
-        ))}
-      </ChatRoomsList>
-      {roomId && <ChatRoom userId={roomId} />}
+      {!roomId && (
+        <ChatRoomsList>
+          {rooms.map((room: DocumentData) => (
+            <RoomLink key={room.id} to={`/chat/${room.chatId}`}>
+              {room.text || "No messages yet"}
+            </RoomLink>
+          ))}
+        </ChatRoomsList>
+      )}
+      {roomId && (
+        <ChatRoomContainer>
+          <ChatRoom userId={roomId} />
+        </ChatRoomContainer>
+      )}
     </ChatPageLayout>
   );
 };

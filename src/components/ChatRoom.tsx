@@ -10,20 +10,25 @@ import {
 } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import ChatMessage from "./ChatMessage";
+import { useNavigate } from "react-router-dom";
+import { IoIosArrowBack } from "react-icons/io";
 
 const ChatLayout = styled.div`
   display: flex;
   width: 100vw;
-  height: 100vh;
+  max-width: 800px;
+  height: 50vh;
   margin: 0 auto;
   overflow: hidden;
 `;
 
 const ChatContainer = styled.div`
+  position: relative;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
   background-color: #f0f0f0;
+  overflow: hidden;
 `;
 
 const MessagesList = styled.div`
@@ -31,6 +36,7 @@ const MessagesList = styled.div`
   overflow-y: auto;
   padding: 20px;
   background-color: white;
+  margin-bottom: auto;
 `;
 
 const MessageForm = styled.form`
@@ -58,12 +64,27 @@ const Button = styled.button`
   }
 `;
 
+const BackButton = styled.button`
+  position: absolute; // 절대 위치
+  top: 10px; // 상단에서 10px
+  left: 10px; // 왼쪽에서 10px
+  background-color: transparent;
+  border: none;
+  padding: 10px;
+  font-size: 24px;
+  cursor: pointer;
+
+  &:hover {
+    color: #007bff;
+  }
+`;
+
 interface IMessage {
   id: string;
   text: string;
   userId: string;
   username: string;
-  createdAt: string; // createdAt의 타입을 string으로 변경
+  createdAt: string;
   isSentByCurrentUser: boolean;
 }
 
@@ -72,6 +93,7 @@ interface ChatRoomProps {
 }
 
 const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
 
@@ -88,14 +110,14 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
       const fetchedMessages = querySnapshot.docs.map((doc) => {
         const data = doc.data();
         const createdAt =
-          (data.createdAt?.toDate() as Date).toLocaleString() || "Unknown date"; // createdat의 타입을 Date로 변환
+          (data.createdAt?.toDate() as Date).toLocaleString() || "Unknown date";
         const isSentByCurrentUser = data.userId === auth.currentUser?.uid;
         return {
           id: doc.id,
           ...data,
           createdAt,
-          isSentByCurrentUser, // isSentbycurrentuser의 철자 수정
-        } as IMessage; // IMessage 유형으로 캐스팅
+          isSentByCurrentUser,
+        } as IMessage;
       });
       setMessages(fetchedMessages);
     });
@@ -119,9 +141,16 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
     setNewMessage("");
   };
 
+  const handleBack = () => {
+    navigate(-1);
+  };
+
   return (
     <ChatLayout>
       <ChatContainer>
+        <BackButton onClick={handleBack}>
+          <IoIosArrowBack />
+        </BackButton>
         <MessagesList>
           {messages.map((msg) => (
             <ChatMessage key={msg.id} message={msg} />

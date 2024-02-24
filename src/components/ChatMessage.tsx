@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { ref, getDownloadURL } from "firebase/storage";
 import { storage } from "../firebase";
+import defaultAvatar from "../defaultavatar.svg";
 
 const MessageContainer = styled.div<{ isSentByCurrentUser: boolean }>`
   display: flex;
@@ -11,9 +12,11 @@ const MessageContainer = styled.div<{ isSentByCurrentUser: boolean }>`
   margin: 10px;
 `;
 
-const MessageContent = styled.div`
+const MessageContent = styled.div<{ isSentByCurrentUser: boolean }>`
   display: flex;
   align-items: center;
+  flex-direction: ${({ isSentByCurrentUser }) =>
+    isSentByCurrentUser ? "row-reverse" : "row"};
 `;
 
 const MessageBubble = styled.div<{ isSentByCurrentUser: boolean }>`
@@ -35,7 +38,6 @@ const Avatar = styled.div<{ isSentByCurrentUser: boolean }>`
   align-items: center;
   background: ${({ isSentByCurrentUser }) =>
     isSentByCurrentUser ? "#DCF8C6" : "#ECECEC"};
-  svg,
   img {
     width: 100%;
     height: 100%;
@@ -71,7 +73,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
           setAvatarUrl(url);
         } catch (error) {
           console.log("Avatar image not found or error fetching:", error);
-          setAvatarUrl("");
+          // 에러 발생 시 기본 아바타 설정은 필요 없음, useState의 초기값이 이를 처리
         }
       }
     };
@@ -81,54 +83,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
 
   return (
     <MessageContainer isSentByCurrentUser={message.isSentByCurrentUser}>
-      <MessageContent>
-        {!message.isSentByCurrentUser && (
-          <Avatar isSentByCurrentUser={message.isSentByCurrentUser}>
-            {avatarUrl ? (
-              <img src={avatarUrl} alt="User avatar" />
-            ) : (
-              <svg
-                fill="none"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-                />
-              </svg>
-            )}
-          </Avatar>
-        )}
+      <MessageContent isSentByCurrentUser={message.isSentByCurrentUser}>
+        <Avatar isSentByCurrentUser={message.isSentByCurrentUser}>
+          <img src={avatarUrl || defaultAvatar} alt="User avatar" />
+        </Avatar>
         <MessageBubble isSentByCurrentUser={message.isSentByCurrentUser}>
           {message.text}
         </MessageBubble>
-        {message.isSentByCurrentUser && (
-          <Avatar isSentByCurrentUser={message.isSentByCurrentUser}>
-            {avatarUrl ? (
-              <img src={avatarUrl} alt="User avatar" />
-            ) : (
-              <svg
-                fill="none"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-                />
-              </svg>
-            )}
-          </Avatar>
-        )}
       </MessageContent>
       <Timestamp>{message.createdAt}</Timestamp>
     </MessageContainer>
