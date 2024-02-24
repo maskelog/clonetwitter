@@ -1,32 +1,60 @@
-import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
 import styled from "styled-components";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { db } from "../firebase";
 import ChatRoom from "../components/ChatRoom";
 
 const ChatPageLayout = styled.div`
   display: flex;
+  flex-direction: column;
   height: 100vh;
 `;
 
+const ChatRoomsList = styled.div`
+  padding: 20px;
+`;
+
+const RoomLink = styled(Link)`
+  display: block;
+  margin-bottom: 10px;
+`;
+
 const ChatPage = () => {
-  const { userID } = useParams();
-  const [selectedUserId, setSelectedUserId] = useState(userID);
+  const { roomId } = useParams();
+  const [rooms, setRooms] = useState([]);
 
   useEffect(() => {
-    setSelectedUserId(userID);
-  }, [userID]);
+    const fetchRooms = async () => {
+      try {
+        const messagesQuery = query(collection(db, "messages"));
+        const querySnapshot = await onSnapshot(messagesQuery, (snapshot) => {
+          const roomIds = new Set();
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            roomIds.add(data.chatId);
+          });
+          const roomIdsArray = Array.from(roomIds);
+          setRooms(roomIdsArray);
+        });
+      } catch (error) {
+        console.error("Error fetching rooms:", error);
+      }
+    };
 
-  const handleUserSelect = (userId) => {
-    setSelectedUserId(userId);
-  };
+    fetchRooms();
+  }, []);
 
   return (
     <ChatPageLayout>
-      {selectedUserId ? (
-        <ChatRoom userId={selectedUserId} />
-      ) : (
-        <div>채팅을 시작하려면 사용자를 선택하세요.</div>
-      )}
+      <ChatRoomsList>
+        {rooms.map((roomId) => (
+          <RoomLink key={roomId} to={`/chat/${roomId}`}>
+            Chat Room: {roomId}
+          </RoomLink>
+        ))}
+      </ChatRoomsList>
+      {roomId && <ChatRoom userId={roomId} />}
     </ChatPageLayout>
   );
 };
