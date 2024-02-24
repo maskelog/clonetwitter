@@ -93,7 +93,7 @@ const ChatPage = () => {
         <ChatRoomsList>
           {rooms.map((room: DocumentData) => (
             <RoomLink key={room.id} to={`/chat/${room.chatId}`}>
-              {room.username || "Unknown"}: {room.text || "No messages yet"}
+              {room.text || "No messages yet"}
             </RoomLink>
           ))}
         </ChatRoomsList>
