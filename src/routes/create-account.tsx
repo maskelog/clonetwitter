@@ -1,8 +1,9 @@
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useState } from "react";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
 import { Link, useNavigate } from "react-router-dom";
 import { FirebaseError } from "firebase/app";
+import { doc, setDoc } from "firebase/firestore";
 import {
   Form,
   Error,
@@ -21,7 +22,7 @@ export default function CreateAccount() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const onChage = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const {
       target: { name, value },
     } = e;
@@ -33,6 +34,7 @@ export default function CreateAccount() {
       setPassword(value);
     }
   };
+
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
@@ -44,10 +46,16 @@ export default function CreateAccount() {
         email,
         password
       );
-      console.log(credentials.user);
+
       await updateProfile(credentials.user, {
         displayName: name,
       });
+
+      await setDoc(doc(db, "users", credentials.user.uid), {
+        name: name,
+        email: email,
+      });
+
       navigate("/");
     } catch (e) {
       if (e instanceof FirebaseError) {
@@ -56,7 +64,6 @@ export default function CreateAccount() {
     } finally {
       setLoading(false);
     }
-    console.log(name, email, password);
   };
 
   return (
@@ -64,7 +71,7 @@ export default function CreateAccount() {
       <Title>Join 𝕏</Title>
       <Form onSubmit={onSubmit}>
         <Input
-          onChange={onChage}
+          onChange={onChange}
           name="name"
           value={name}
           placeholder="Name"
@@ -72,7 +79,7 @@ export default function CreateAccount() {
           required
         />
         <Input
-          onChange={onChage}
+          onChange={onChange}
           name="email"
           value={email}
           placeholder="Email"
@@ -80,10 +87,10 @@ export default function CreateAccount() {
           required
         />
         <Input
-          onChange={onChage}
+          onChange={onChange}
           name="password"
           value={password}
-          placeholder="password"
+          placeholder="Password"
           type="password"
           required
         />

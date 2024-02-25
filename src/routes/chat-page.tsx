@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useParams, Link } from "react-router-dom";
-import { collection, query, onSnapshot, orderBy } from "firebase/firestore";
+import {
+  collection,
+  query,
+  onSnapshot,
+  orderBy,
+  doc,
+  getDoc,
+} from "firebase/firestore";
 import { ref, getDownloadURL } from "firebase/storage";
 import { auth, db, storage } from "../firebase";
 import ChatRoom from "../components/ChatRoom";
@@ -99,6 +106,7 @@ export default function ChatPage() {
           let avatarUrl = defaultAvatar;
           let username = "Unknown";
 
+          // 아바타 URL 가져오기
           try {
             const avatarRef = ref(storage, `avatars/${otherUserId}`);
             avatarUrl = await getDownloadURL(avatarRef);
@@ -106,10 +114,12 @@ export default function ChatPage() {
             console.error("Error fetching avatar:", error);
           }
 
+          // 사용자 이름 가져오기
           try {
-            const userDoc = await getDoc(doc(db, "users", otherUserId));
-            if (userDoc.exists()) {
-              username = userDoc.data().username;
+            const userRef = doc(db, "users", otherUserId);
+            const userSnap = await getDoc(userRef);
+            if (userSnap.exists()) {
+              username = userSnap.data().name || "Unknown"; // 'name' 필드 사용
             }
           } catch (error) {
             console.error("Error fetching user info:", error);
