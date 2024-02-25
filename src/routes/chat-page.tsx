@@ -1,18 +1,11 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useParams, Link } from "react-router-dom";
-import {
-  collection,
-  query,
-  onSnapshot,
-  QuerySnapshot,
-  DocumentData,
-  orderBy,
-} from "firebase/firestore";
+import { collection, query, onSnapshot, orderBy } from "firebase/firestore";
 import { ref, getDownloadURL } from "firebase/storage";
-import { db, storage } from "../firebase";
+import { auth, db, storage } from "../firebase";
 import ChatRoom from "../components/ChatRoom";
-import defaultAvatar from "../defaultavatar.svg"; // 기본 아바타 이미지 경로
+import defaultAvatar from "../defaultavatar.svg";
 
 const ChatPageLayout = styled.div`
   display: flex;
@@ -62,9 +55,20 @@ const Avatar = styled.img`
   margin-right: 10px;
 `;
 
+interface IMessage {
+  id: string;
+  chatId: string;
+  userId: string;
+  text?: string;
+  username?: string;
+  createdAt: string;
+  avatarUrl?: string;
+}
+
 export default function ChatPage() {
   const { roomId } = useParams<{ roomId: string }>();
-  const [rooms, setRooms] = useState<DocumentData[]>([]);
+  const [rooms, setRooms] = useState<IMessage[]>([]);
+  const currentUserUid = auth.currentUser?.uid;
 
   useEffect(() => {
     const fetchRooms = async () => {
@@ -73,26 +77,56 @@ export default function ChatPage() {
         orderBy("createdAt", "desc")
       );
       const unsubscribe = onSnapshot(messagesQuery, async (snapshot) => {
-        const roomsData = await Promise.all(
-          snapshot.docs.map(async (doc) => {
-            const data = doc.data();
-            let avatarUrl = defaultAvatar;
-            try {
-              const avatarRef = ref(storage, `avatars/${data.userId}`);
-              avatarUrl = await getDownloadURL(avatarRef);
-            } catch (error) {
-              console.error("Avatar image not found or error fetching:", error);
+        const roomsMap: { [key: string]: IMessage } = {};
+
+        for (const doc of snapshot.docs) {
+          const message = { ...doc.data(), id: doc.id } as IMessage;
+
+          if (
+            !roomsMap[message.chatId] ||
+            new Date(roomsMap[message.chatId].createdAt) <
+              new Date(message.createdAt)
+          ) {
+            roomsMap[message.chatId] = message;
+          }
+        }
+
+        const roomsDataPromises = Object.keys(roomsMap).map(async (chatId) => {
+          const message = roomsMap[chatId];
+          const otherUserId =
+            message.userId === currentUserUid ? message.chatId : message.userId;
+
+          let avatarUrl = defaultAvatar;
+          let username = "Unknown";
+
+          try {
+            const avatarRef = ref(storage, `avatars/${otherUserId}`);
+            avatarUrl = await getDownloadURL(avatarRef);
+          } catch (error) {
+            console.error("Error fetching avatar:", error);
+          }
+
+          try {
+            const userDoc = await getDoc(doc(db, "users", otherUserId));
+            if (userDoc.exists()) {
+              username = userDoc.data().username;
             }
-            return { ...data, id: doc.id, avatarUrl }; // 각 채팅방 데이터에 avatarUrl 추가
-          })
-        );
+          } catch (error) {
+            console.error("Error fetching user info:", error);
+          }
+
+          return { ...message, avatarUrl, username };
+        });
+
+        const roomsData = await Promise.all(roomsDataPromises);
         setRooms(roomsData);
       });
+
       return () => unsubscribe();
     };
 
     fetchRooms();
-  }, []);
+  }, [currentUserUid]);
 
   return (
     <ChatPageLayout>
