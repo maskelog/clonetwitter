@@ -1,15 +1,18 @@
-import { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
+import { useParams, Link } from "react-router-dom";
 import {
   collection,
   query,
   onSnapshot,
   QuerySnapshot,
   DocumentData,
+  orderBy,
 } from "firebase/firestore";
-import { db } from "../firebase";
+import { ref, getDownloadURL } from "firebase/storage";
+import { db, storage } from "../firebase";
 import ChatRoom from "../components/ChatRoom";
+import defaultAvatar from "../defaultavatar.svg"; // 기본 아바타 이미지 경로
 
 const ChatPageLayout = styled.div`
   display: flex;
@@ -26,7 +29,7 @@ const ChatRoomsList = styled.div`
 `;
 
 const ChatRoomContainer = styled.div`
-  flex: 1;
+  flex: 3;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -39,7 +42,7 @@ const RoomLink = styled(Link)`
   margin-bottom: 10px;
   padding: 10px;
   text-decoration: none;
-  color: white;
+  color: #333;
   transition: background-color 0.3s;
   border-radius: 8px;
   overflow: hidden;
@@ -52,36 +55,40 @@ const RoomLink = styled(Link)`
   }
 `;
 
-const ChatPage = () => {
+const Avatar = styled.img`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
+`;
+
+export default function ChatPage() {
   const { roomId } = useParams<{ roomId: string }>();
   const [rooms, setRooms] = useState<DocumentData[]>([]);
 
   useEffect(() => {
     const fetchRooms = async () => {
-      try {
-        const messagesQuery = query(collection(db, "messages"));
-        const unsubscribe = onSnapshot(
-          messagesQuery,
-          (snapshot: QuerySnapshot<DocumentData>) => {
-            const lastMessages = new Map<string, DocumentData>();
-            snapshot.forEach((doc) => {
-              const data = doc.data();
-              const chatId = data.chatId;
-              const message = { id: doc.id, ...data };
-              if (
-                !lastMessages.has(chatId) ||
-                message.createdAt > lastMessages.get(chatId).createdAt
-              ) {
-                lastMessages.set(chatId, message);
-              }
-            });
-            setRooms(Array.from(lastMessages.values()));
-          }
+      const messagesQuery = query(
+        collection(db, "messages"),
+        orderBy("createdAt", "desc")
+      );
+      const unsubscribe = onSnapshot(messagesQuery, async (snapshot) => {
+        const roomsData = await Promise.all(
+          snapshot.docs.map(async (doc) => {
+            const data = doc.data();
+            let avatarUrl = defaultAvatar;
+            try {
+              const avatarRef = ref(storage, `avatars/${data.userId}`);
+              avatarUrl = await getDownloadURL(avatarRef);
+            } catch (error) {
+              console.error("Avatar image not found or error fetching:", error);
+            }
+            return { ...data, id: doc.id, avatarUrl }; // 각 채팅방 데이터에 avatarUrl 추가
+          })
         );
-        return () => unsubscribe();
-      } catch (error) {
-        console.error("Error fetching rooms:", error);
-      }
+        setRooms(roomsData);
+      });
+      return () => unsubscribe();
     };
 
     fetchRooms();
@@ -91,9 +98,13 @@ const ChatPage = () => {
     <ChatPageLayout>
       {!roomId && (
         <ChatRoomsList>
-          {rooms.map((room: DocumentData) => (
+          {rooms.map((room) => (
             <RoomLink key={room.id} to={`/chat/${room.chatId}`}>
-              {room.text || "No messages yet"}
+              <Avatar src={room.avatarUrl} alt="Avatar" />
+              <div>
+                <div>{room.username || "Unknown"}</div>
+                <div>{room.text || "No messages yet"}</div>
+              </div>
             </RoomLink>
           ))}
         </ChatRoomsList>
@@ -105,6 +116,4 @@ const ChatPage = () => {
       )}
     </ChatPageLayout>
   );
-};
-
-export default ChatPage;
+}
