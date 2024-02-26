@@ -5,16 +5,17 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { updateProfile } from "firebase/auth";
 import {
   collection,
+  doc,
   getDocs,
   limit,
   orderBy,
   query,
-  where,
-  doc,
   updateDoc,
+  where,
 } from "firebase/firestore";
 import { ITweet } from "../components/timeline";
 import Tweet from "../components/tweet";
+import defaultAvatar from "../defaultavatar.svg";
 
 const Wrapper = styled.div`
   display: flex;
@@ -34,10 +35,6 @@ const AvatarUpload = styled.label`
   align-items: center;
   overflow: hidden;
   position: relative;
-  svg {
-    width: 100px;
-    height: 100px;
-  }
 `;
 
 const AvatarImg = styled.img`
@@ -103,7 +100,7 @@ const Tweets = styled.div`
 
 export default function Profile() {
   const user = auth.currentUser;
-  const [avatar, setAvatar] = useState(user?.photoURL);
+  const [avatar, setAvatar] = useState(user?.photoURL || defaultAvatar);
   const [tweets, setTweets] = useState<ITweet[]>([]);
   const [newUsername, setNewUsername] = useState(user?.displayName ?? "");
   const [isEditingUsername, setIsEditingUsername] = useState(false);
@@ -175,11 +172,7 @@ export default function Profile() {
   return (
     <Wrapper>
       <AvatarUpload htmlFor="avatar">
-        {avatar ? (
-          <AvatarImg src={avatar} />
-        ) : (
-          <svg /* SVG 내용 생략 */>{/* SVG Path */}</svg>
-        )}
+        <AvatarImg src={avatar} alt="User avatar" />
       </AvatarUpload>
       <AvatarInput
         onChange={onAvatarChange}
