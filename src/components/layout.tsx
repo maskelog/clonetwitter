@@ -1,6 +1,7 @@
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { auth } from "../firebase";
+import { useState } from "react";
 
 const Wrapper = styled.div`
   display: grid;
@@ -19,6 +20,16 @@ const Menu = styled.div`
   gap: 20px;
 `;
 
+const NotificationDot = styled.span`
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 10px;
+  height: 10px;
+  background-color: red;
+  border-radius: 50%;
+`;
+
 const MenuItem = styled.div`
   cursor: pointer;
   display: flex;
@@ -28,6 +39,7 @@ const MenuItem = styled.div`
   height: 50px;
   width: 50px;
   border-radius: 50%;
+  position: relative;
   svg {
     width: 30px;
     fill: white;
@@ -42,6 +54,8 @@ const MenuItem = styled.div`
 
 export default function Layout() {
   const navigate = useNavigate();
+  const [hasNotification, setHasNotification] = useState(true); // 예시로 항상 true
+
   const onLogOut = async () => {
     const ok = confirm("Are you sure you want to log out?");
     if (ok) {
@@ -82,6 +96,7 @@ export default function Layout() {
         </Link>
         <Link to="/chat">
           <MenuItem>
+            {hasNotification && <NotificationDot />}
             <svg
               fill="none"
               strokeWidth={1.5}
