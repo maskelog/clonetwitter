@@ -1,7 +1,17 @@
-import { Link, Outlet, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { auth } from "../firebase";
-import { useState } from "react";
+import { Link, Outlet, useNavigate } from "react-router-dom";
+import { auth, db } from "../firebase";
+import {
+  collection,
+  doc,
+  getDoc,
+  onSnapshot,
+  query,
+  serverTimestamp,
+  where,
+  orderBy,
+} from "firebase/firestore";
 
 const Wrapper = styled.div`
   display: grid;
@@ -54,15 +64,46 @@ const MenuItem = styled.div`
 
 export default function Layout() {
   const navigate = useNavigate();
-  const [hasNotification, setHasNotification] = useState(true); // 예시로 항상 true
+  const [hasNotification, setHasNotification] = useState(false);
+
+  useEffect(() => {
+    const currentUserUid = auth.currentUser?.uid;
+    if (!currentUserUid) return;
+
+    const userDocRef = doc(db, "users", currentUserUid);
+
+    getDoc(userDocRef).then((docSnapshot) => {
+      if (docSnapshot.exists()) {
+        const userData = docSnapshot.data();
+        const lastReadTime = userData.lastReadTime;
+
+        const messagesQuery = query(
+          collection(db, "messages"),
+          where("createdAt", ">", lastReadTime),
+          where("userId", "!=", currentUserUid)
+        );
+
+        const unsubscribeMessages = onSnapshot(
+          messagesQuery,
+          (querySnapshot) => {
+            const hasNewMessages = querySnapshot.docs.length > 0;
+            setHasNotification(hasNewMessages);
+          }
+        );
+
+        return () => unsubscribeMessages();
+      }
+    });
+  }, []);
 
   const onLogOut = async () => {
-    const ok = confirm("Are you sure you want to log out?");
+    const ok = window.confirm("Are you sure you want to log out?");
     if (ok) {
       await auth.signOut();
       navigate("/login");
     }
   };
+
   return (
     <Wrapper>
       <Menu>

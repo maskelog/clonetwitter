@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { ref, getDownloadURL } from "firebase/storage";
-import { storage } from "../firebase";
+import { auth, storage } from "../firebase";
 import defaultAvatar from "../defaultavatar.svg";
 
 const MessageContainer = styled.div<{ isSentByCurrentUser: boolean }>`
@@ -71,6 +71,12 @@ const Timestamp = styled.div<{ isSentByCurrentUser: boolean }>`
   margin-top: 5px;
 `;
 
+const ReadStatus = styled.span`
+  font-size: 12px;
+  color: #888;
+  margin-left: 10px;
+`;
+
 interface ChatMessageProps {
   message: {
     text: string;
@@ -78,6 +84,8 @@ interface ChatMessageProps {
     username: string;
     createdAt: string;
     isSentByCurrentUser: boolean;
+    readByCurrentUser: boolean;
+    read: string[];
   };
 }
 
@@ -93,6 +101,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
           setAvatarUrl(url);
         } catch (error) {
           console.log("Avatar image not found or error fetching:", error);
+          setAvatarUrl(defaultAvatar);
         }
       }
     };
@@ -100,11 +109,16 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     fetchAvatarUrl();
   }, [message.userId]);
 
+  const currentUserUid = auth.currentUser?.uid;
+  const isReadByCurrentUser = currentUserUid
+    ? message.read.includes(currentUserUid)
+    : false;
+
   return (
     <MessageContainer isSentByCurrentUser={message.isSentByCurrentUser}>
       <UserInfoContainer isSentByCurrentUser={message.isSentByCurrentUser}>
         <Avatar isSentByCurrentUser={message.isSentByCurrentUser}>
-          <img src={avatarUrl} alt="User avatar" />
+          <img src={avatarUrl || defaultAvatar} alt="User avatar" />
         </Avatar>
         <Username>{message.username}</Username>
       </UserInfoContainer>
@@ -114,6 +128,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         </MessageBubble>
         <Timestamp isSentByCurrentUser={message.isSentByCurrentUser}>
           {message.createdAt}
+          {isReadByCurrentUser ? (
+            <ReadStatus />
+          ) : (
+            <ReadStatus>읽지 않음</ReadStatus>
+          )}
         </Timestamp>
       </MessageContent>
     </MessageContainer>

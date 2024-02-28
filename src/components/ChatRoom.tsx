@@ -7,6 +7,9 @@ import {
   onSnapshot,
   addDoc,
   orderBy,
+  updateDoc,
+  doc,
+  serverTimestamp,
 } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import ChatMessage from "./ChatMessage";
@@ -65,9 +68,9 @@ const Button = styled.button`
 `;
 
 const BackButton = styled.button`
-  position: absolute; // 절대 위치
-  top: 10px; // 상단에서 10px
-  left: 10px; // 왼쪽에서 10px
+  position: absolute;
+  top: 10px;
+  left: 10px;
   background-color: transparent;
   border: none;
   padding: 10px;
@@ -86,6 +89,7 @@ interface IMessage {
   username: string;
   createdAt: string;
   isSentByCurrentUser: boolean;
+  read?: string[];
 }
 
 interface ChatRoomProps {
@@ -106,7 +110,22 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
       orderBy("createdAt", "asc")
     );
 
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+    const unsubscribe = onSnapshot(q, async (querySnapshot) => {
+      const updates = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        const isReadByCurrentUser = data.read?.includes(auth.currentUser?.uid);
+        if (!isReadByCurrentUser) {
+          updates.push(
+            updateDoc(doc.ref, {
+              read: [...(data.read || []), auth.currentUser?.uid],
+            })
+          );
+        }
+      });
+
+      await Promise.all(updates);
+
       const fetchedMessages = querySnapshot.docs.map((doc) => {
         const data = doc.data();
         const createdAt =
@@ -117,6 +136,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
           ...data,
           createdAt,
           isSentByCurrentUser,
+          read: data.read || [],
         } as IMessage;
       });
       setMessages(fetchedMessages);
@@ -125,23 +145,34 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
     return () => unsubscribe();
   }, [userId]);
 
+  useEffect(() => {
+    updateLastReadTime();
+  }, []);
+
   const handleSend = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const currentUser = auth.currentUser;
-    if (!currentUser || newMessage.trim() === "") return;
-
-    const username = currentUser.displayName || "Anonymous";
+    if (!auth.currentUser || newMessage.trim() === "") return;
 
     await addDoc(collection(db, "messages"), {
       text: newMessage,
-      createdAt: new Date(),
+      createdAt: serverTimestamp(),
       chatId: userId,
-      userId: currentUser.uid,
-      username,
+      userId: auth.currentUser.uid,
+      username: auth.currentUser.displayName || "Anonymous",
+      read: [auth.currentUser.uid],
     });
 
     setNewMessage("");
+  };
+
+  const updateLastReadTime = async () => {
+    const currentUserUid = auth.currentUser?.uid;
+    if (!currentUserUid) return;
+
+    await updateDoc(doc(db, "users", currentUserUid), {
+      lastReadTime: serverTimestamp(),
+    });
   };
 
   const handleBack = () => {
