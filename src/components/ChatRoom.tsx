@@ -119,10 +119,8 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
         read: doc.data().read || [],
       }));
 
-      // Update messages state
       setMessages(updatedMessages);
 
-      // Mark messages as read
       markMessagesAsRead(updatedMessages);
     });
 
@@ -135,6 +133,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
         !msg.read.includes(auth.currentUser!.uid) &&
         msg.userId !== auth.currentUser!.uid
     );
+
     unreadMessages.forEach((msg) => {
       const msgRef = doc(db, "messages", msg.id);
       updateDoc(msgRef, {
@@ -153,7 +152,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
       chatId: userId,
       userId: auth.currentUser.uid,
       username: auth.currentUser.displayName || "Anonymous",
-      read: [auth.currentUser.uid], // Initially mark the message as read by the sender
+      read: [auth.currentUser.uid],
     });
 
     setNewMessage("");

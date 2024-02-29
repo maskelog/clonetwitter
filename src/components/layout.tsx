@@ -100,15 +100,6 @@ export default function Layout() {
     return () => unsubscribe();
   }, []);
 
-  const updateLastReadTime = async (roomId) => {
-    const currentUserUid = auth.currentUser?.uid;
-    if (!currentUserUid) return;
-
-    await updateDoc(doc(db, "users", currentUserUid), {
-      [`lastReadTime.${roomId}`]: serverTimestamp(),
-    });
-  };
-
   const onLogOut = async () => {
     const ok = window.confirm("Are you sure you want to log out?");
     if (ok) {
