@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { auth, db } from "../firebase";
@@ -6,11 +6,12 @@ import {
   collection,
   doc,
   getDoc,
+  getDocs,
   onSnapshot,
   query,
   serverTimestamp,
+  updateDoc,
   where,
-  orderBy,
 } from "firebase/firestore";
 
 const Wrapper = styled.div`
@@ -70,31 +71,43 @@ export default function Layout() {
     const currentUserUid = auth.currentUser?.uid;
     if (!currentUserUid) return;
 
-    const userDocRef = doc(db, "users", currentUserUid);
+    const unsubscribe = onSnapshot(
+      doc(db, "users", currentUserUid),
+      async (docSnapshot) => {
+        if (docSnapshot.exists()) {
+          const userData = docSnapshot.data();
+          const lastReadTime = userData.lastReadTime || {};
 
-    getDoc(userDocRef).then((docSnapshot) => {
-      if (docSnapshot.exists()) {
-        const userData = docSnapshot.data();
-        const lastReadTime = userData.lastReadTime;
-
-        const messagesQuery = query(
-          collection(db, "messages"),
-          where("createdAt", ">", lastReadTime),
-          where("userId", "!=", currentUserUid)
-        );
-
-        const unsubscribeMessages = onSnapshot(
-          messagesQuery,
-          (querySnapshot) => {
-            const hasNewMessages = querySnapshot.docs.length > 0;
-            setHasNotification(hasNewMessages);
+          let hasUnreadMessages = false;
+          for (const roomId of Object.keys(lastReadTime)) {
+            const messagesQuery = query(
+              collection(db, "messages"),
+              where("chatId", "==", roomId),
+              where("createdAt", ">", lastReadTime[roomId])
+            );
+            const querySnapshot = await getDocs(messagesQuery);
+            if (!querySnapshot.empty) {
+              hasUnreadMessages = true;
+              break;
+            }
           }
-        );
 
-        return () => unsubscribeMessages();
+          setHasNotification(hasUnreadMessages);
+        }
       }
-    });
+    );
+
+    return () => unsubscribe();
   }, []);
+
+  const updateLastReadTime = async (roomId) => {
+    const currentUserUid = auth.currentUser?.uid;
+    if (!currentUserUid) return;
+
+    await updateDoc(doc(db, "users", currentUserUid), {
+      [`lastReadTime.${roomId}`]: serverTimestamp(),
+    });
+  };
 
   const onLogOut = async () => {
     const ok = window.confirm("Are you sure you want to log out?");

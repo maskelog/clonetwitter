@@ -87,9 +87,9 @@ interface IMessage {
   text: string;
   userId: string;
   username: string;
-  createdAt: string;
+  createdAt: Date | string;
   isSentByCurrentUser: boolean;
-  read?: string[];
+  read: string[];
 }
 
 interface ChatRoomProps {
@@ -102,56 +102,49 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
   const [newMessage, setNewMessage] = useState("");
 
   useEffect(() => {
-    if (!userId) return;
-
-    const q = query(
+    const messagesQuery = query(
       collection(db, "messages"),
       where("chatId", "==", userId),
-      orderBy("createdAt", "asc")
+      orderBy("createdAt")
     );
 
-    const unsubscribe = onSnapshot(q, async (querySnapshot) => {
-      const updates = [];
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        const isReadByCurrentUser = data.read?.includes(auth.currentUser?.uid);
-        if (!isReadByCurrentUser) {
-          updates.push(
-            updateDoc(doc.ref, {
-              read: [...(data.read || []), auth.currentUser?.uid],
-            })
-          );
-        }
-      });
+    const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
+      const updatedMessages: IMessage[] = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        text: doc.data().text,
+        userId: doc.data().userId,
+        username: doc.data().username,
+        createdAt: doc.data().createdAt.toDate().toLocaleString(),
+        isSentByCurrentUser: doc.data().userId === auth.currentUser?.uid,
+        read: doc.data().read || [],
+      }));
 
-      await Promise.all(updates);
+      // Update messages state
+      setMessages(updatedMessages);
 
-      const fetchedMessages = querySnapshot.docs.map((doc) => {
-        const data = doc.data();
-        const createdAt =
-          (data.createdAt?.toDate() as Date).toLocaleString() || "Unknown date";
-        const isSentByCurrentUser = data.userId === auth.currentUser?.uid;
-        return {
-          id: doc.id,
-          ...data,
-          createdAt,
-          isSentByCurrentUser,
-          read: data.read || [],
-        } as IMessage;
-      });
-      setMessages(fetchedMessages);
+      // Mark messages as read
+      markMessagesAsRead(updatedMessages);
     });
 
-    return () => unsubscribe();
+    return unsubscribe;
   }, [userId]);
 
-  useEffect(() => {
-    updateLastReadTime();
-  }, []);
+  const markMessagesAsRead = async (updatedMessages: IMessage[]) => {
+    const unreadMessages = updatedMessages.filter(
+      (msg) =>
+        !msg.read.includes(auth.currentUser!.uid) &&
+        msg.userId !== auth.currentUser!.uid
+    );
+    unreadMessages.forEach((msg) => {
+      const msgRef = doc(db, "messages", msg.id);
+      updateDoc(msgRef, {
+        read: [...msg.read, auth.currentUser!.uid],
+      });
+    });
+  };
 
   const handleSend = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     if (!auth.currentUser || newMessage.trim() === "") return;
 
     await addDoc(collection(db, "messages"), {
@@ -160,24 +153,13 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
       chatId: userId,
       userId: auth.currentUser.uid,
       username: auth.currentUser.displayName || "Anonymous",
-      read: [auth.currentUser.uid],
+      read: [auth.currentUser.uid], // Initially mark the message as read by the sender
     });
 
     setNewMessage("");
   };
 
-  const updateLastReadTime = async () => {
-    const currentUserUid = auth.currentUser?.uid;
-    if (!currentUserUid) return;
-
-    await updateDoc(doc(db, "users", currentUserUid), {
-      lastReadTime: serverTimestamp(),
-    });
-  };
-
-  const handleBack = () => {
-    navigate(-1);
-  };
+  const handleBack = () => navigate(-1);
 
   return (
     <ChatLayout>
