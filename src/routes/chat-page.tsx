@@ -87,7 +87,7 @@ interface IMessage {
   userId: string;
   text?: string;
   username?: string;
-  createdAt: any;
+  createdAt: string;
   avatarUrl?: string;
 }
 
@@ -108,15 +108,20 @@ export default function ChatPage() {
         orderBy("createdAt", "desc")
       );
       const unsubscribe = onSnapshot(messagesQuery, async (snapshot) => {
-        const roomsMap = {};
+        const roomsMap: { [key: string]: IMessage } = {};
 
         snapshot.docs.forEach((doc) => {
           const data = doc.data();
-          const message = {
+          const otherUserId =
+            data.userId === currentUserUid ? data.chatId : data.userId;
+
+          const message: IMessage = {
             ...data,
             id: doc.id,
+            userId: otherUserId,
             createdAt: data.createdAt.toDate().toLocaleString(),
           };
+
           if (
             !roomsMap[message.chatId] ||
             new Date(roomsMap[message.chatId].createdAt).getTime() <
@@ -129,6 +134,8 @@ export default function ChatPage() {
         const roomsDataPromises = Object.keys(roomsMap).map(async (chatId) => {
           const message = roomsMap[chatId];
           let avatarUrl = defaultAvatar;
+          let username = "Unknown";
+
           try {
             const avatarRef = ref(storage, `avatars/${message.userId}`);
             avatarUrl = await getDownloadURL(avatarRef);
@@ -136,7 +143,6 @@ export default function ChatPage() {
             console.error("Error fetching avatar:", error);
           }
 
-          let username = "Unknown";
           try {
             const userSnap = await getDoc(doc(db, "users", message.userId));
             if (userSnap.exists()) {
