@@ -71,31 +71,20 @@ export default function Layout() {
     const currentUserUid = auth.currentUser?.uid;
     if (!currentUserUid) return;
 
-    const unsubscribe = onSnapshot(
-      doc(db, "users", currentUserUid),
-      async (docSnapshot) => {
-        if (docSnapshot.exists()) {
-          const userData = docSnapshot.data();
-          const lastReadTime = userData.lastReadTime || {};
+    const unsubscribe = onSnapshot(collection(db, "messages"), (snapshot) => {
+      let hasUnreadMessages = false;
 
-          let hasUnreadMessages = false;
-          for (const roomId of Object.keys(lastReadTime)) {
-            const messagesQuery = query(
-              collection(db, "messages"),
-              where("chatId", "==", roomId),
-              where("createdAt", ">", lastReadTime[roomId])
-            );
-            const querySnapshot = await getDocs(messagesQuery);
-            if (!querySnapshot.empty) {
-              hasUnreadMessages = true;
-              break;
-            }
-          }
-
-          setHasNotification(hasUnreadMessages);
+      snapshot.docs.forEach((doc) => {
+        const data = doc.data();
+        if (data.read && !data.read.includes(currentUserUid)) {
+          // 현재 사용자의 ID가 read 배열에 포함되어있지 않으면,
+          // 현재 사용자는 이 메시지 읽지 않음
+          hasUnreadMessages = true;
         }
-      }
-    );
+      });
+
+      setHasNotification(hasUnreadMessages);
+    });
 
     return () => unsubscribe();
   }, []);

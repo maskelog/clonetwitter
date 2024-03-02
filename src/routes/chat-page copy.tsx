@@ -10,6 +10,8 @@ import {
   orderBy,
   doc,
   getDoc,
+  updateDoc,
+  serverTimestamp,
 } from "firebase/firestore";
 import defaultAvatar from "../defaultavatar.svg";
 import ChatRoom from "../components/ChatRoom";
@@ -79,6 +81,16 @@ const Timestamp = styled.span`
   color: #666;
 `;
 
+interface IMessage {
+  id: string;
+  chatId: string;
+  userId: string;
+  text?: string;
+  username?: string;
+  createdAt: string;
+  avatarUrl?: string;
+}
+
 interface Timestamp {
   seconds: number;
   nanoseconds: number;
@@ -86,7 +98,7 @@ interface Timestamp {
 
 export default function ChatPage() {
   const { roomId } = useParams<{ roomId: string }>();
-  const [rooms, setRooms] = useState([]);
+  const [rooms, setRooms] = useState<IMessage[]>([]);
   const currentUserUid = auth.currentUser?.uid;
 
   useEffect(() => {
@@ -95,45 +107,55 @@ export default function ChatPage() {
         collection(db, "messages"),
         orderBy("createdAt", "desc")
       );
-
       const unsubscribe = onSnapshot(messagesQuery, async (snapshot) => {
-        const roomsData = await Promise.all(
-          snapshot.docs.map(async (docSnapshot) => {
-            const data = docSnapshot.data();
-            const chatIdParts = data.chatId.split("-");
-            const otherUserId = chatIdParts.find((id) => id !== currentUserUid);
+        const roomsMap: { [key: string]: IMessage } = {};
 
-            let avatarUrl = defaultAvatar;
-            let username = "Unknown";
-            if (otherUserId) {
-              const userRef = doc(db, "users", otherUserId);
-              const userSnap = await getDoc(userRef);
-              if (userSnap.exists()) {
-                const userProfile = userSnap.data();
-                username = userProfile.name || "Unknown";
-                try {
-                  avatarUrl = await getDownloadURL(
-                    ref(storage, `avatars/${otherUserId}`)
-                  );
-                } catch (error) {
-                  console.error("Error fetching avatar:", error);
-                  avatarUrl = defaultAvatar;
-                }
-              }
+        snapshot.docs.forEach((doc) => {
+          const data = doc.data();
+          const otherUserId =
+            data.userId === currentUserUid ? data.chatId : data.userId;
+
+          const message: IMessage = {
+            ...data,
+            id: doc.id,
+            userId: otherUserId,
+            createdAt: data.createdAt.toDate().toLocaleString(),
+          };
+
+          if (
+            !roomsMap[message.chatId] ||
+            new Date(roomsMap[message.chatId].createdAt).getTime() <
+              new Date(message.createdAt).getTime()
+          ) {
+            roomsMap[message.chatId] = message;
+          }
+        });
+
+        const roomsDataPromises = Object.keys(roomsMap).map(async (chatId) => {
+          const message = roomsMap[chatId];
+          let avatarUrl = defaultAvatar;
+          let username = "Unknown";
+
+          try {
+            const avatarRef = ref(storage, `avatars/${message.userId}`);
+            avatarUrl = await getDownloadURL(avatarRef);
+          } catch (error) {
+            console.error("Error fetching avatar:", error);
+          }
+
+          try {
+            const userSnap = await getDoc(doc(db, "users", message.userId));
+            if (userSnap.exists()) {
+              username = userSnap.data().name || "Unknown";
             }
+          } catch (error) {
+            console.error("Error fetching user info:", error);
+          }
 
-            return {
-              id: docSnapshot.id,
-              chatId: data.chatId,
-              userId: otherUserId,
-              username,
-              avatarUrl,
-              createdAt: data.createdAt.toDate().toLocaleString(),
-              text: data.text,
-            };
-          })
-        );
+          return { ...message, avatarUrl, username };
+        });
 
+        const roomsData = await Promise.all(roomsDataPromises);
         setRooms(roomsData);
       });
 
@@ -142,6 +164,18 @@ export default function ChatPage() {
 
     fetchRooms();
   }, [currentUserUid]);
+
+  useEffect(() => {
+    if (roomId) {
+      updateLastReadTime(roomId);
+    }
+  }, [roomId]);
+
+  const updateLastReadTime = async (roomId) => {
+    await updateDoc(doc(db, "users", currentUserUid), {
+      [`lastReadTime.${roomId}`]: serverTimestamp(),
+    });
+  };
 
   return (
     <ChatPageLayout>

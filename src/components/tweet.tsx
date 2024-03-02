@@ -161,7 +161,11 @@ export default function Tweet({ id, userId, username, tweet, photo }: ITweet) {
   const navigate = useNavigate();
 
   const handleUsernameClick = () => {
-    navigate(`/chat/${userId}`);
+    const myUserId = auth.currentUser?.uid;
+    const otherUserId = userId;
+    const sortedUserIds = [myUserId, otherUserId].sort();
+    const chatPath = `chat/${sortedUserIds.join("-")}`;
+    navigate(`/${chatPath}`);
   };
 
   return (
