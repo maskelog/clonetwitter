@@ -84,63 +84,75 @@ interface Timestamp {
   nanoseconds: number;
 }
 
+interface Room {
+  id: string;
+  chatId: string;
+  userId: string;
+  username: string;
+  avatarUrl: string;
+  createdAt: string;
+  text: string;
+}
+
 export default function ChatPage() {
   const { roomId } = useParams<{ roomId: string }>();
-  const [rooms, setRooms] = useState([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
   const currentUserUid = auth.currentUser?.uid;
 
   useEffect(() => {
-    const fetchRooms = async () => {
-      const messagesQuery = query(
-        collection(db, "messages"),
-        orderBy("createdAt", "desc")
-      );
+    const currentUserUid = auth.currentUser?.uid;
+    if (!currentUserUid) return;
 
-      const unsubscribe = onSnapshot(messagesQuery, async (snapshot) => {
-        const roomsData = await Promise.all(
-          snapshot.docs.map(async (docSnapshot) => {
-            const data = docSnapshot.data();
-            const chatIdParts = data.chatId.split("-");
-            const otherUserId = chatIdParts.find((id) => id !== currentUserUid);
+    const unsubscribe = onSnapshot(
+      query(collection(db, "messages"), orderBy("createdAt", "desc")),
+      async (snapshot) => {
+        const roomsMap: { [key: string]: Room } = {};
+        const userInfos: {
+          [key: string]: { username: string; avatarUrl: string };
+        } = {};
 
-            let avatarUrl = defaultAvatar;
-            let username = "Unknown";
-            if (otherUserId) {
-              const userRef = doc(db, "users", otherUserId);
-              const userSnap = await getDoc(userRef);
-              if (userSnap.exists()) {
-                const userProfile = userSnap.data();
-                username = userProfile.name || "Unknown";
-                try {
-                  avatarUrl = await getDownloadURL(
-                    ref(storage, `avatars/${otherUserId}`)
-                  );
-                } catch (error) {
-                  console.error("Error fetching avatar:", error);
-                  avatarUrl = defaultAvatar;
-                }
-              }
+        for (const docSnapshot of snapshot.docs) {
+          const data = docSnapshot.data();
+          const chatId = data.chatId;
+
+          const otherUserId = chatId
+            .replace(currentUserUid, "")
+            .replace("-", "");
+
+          if (roomsMap[chatId]) continue;
+
+          if (!userInfos[otherUserId]) {
+            const userSnap = await getDoc(doc(db, "users", otherUserId));
+            if (userSnap.exists()) {
+              const { name, avatarUrl } = userSnap.data();
+              userInfos[otherUserId] = {
+                username: name || "Unknown",
+                avatarUrl: avatarUrl || defaultAvatar,
+              };
+            } else {
+              userInfos[otherUserId] = {
+                username: "Unknown",
+                avatarUrl: defaultAvatar,
+              };
             }
+          }
 
-            return {
-              id: docSnapshot.id,
-              chatId: data.chatId,
-              userId: otherUserId,
-              username,
-              avatarUrl,
-              createdAt: data.createdAt.toDate().toLocaleString(),
-              text: data.text,
-            };
-          })
-        );
+          roomsMap[chatId] = {
+            id: docSnapshot.id,
+            chatId,
+            userId: otherUserId,
+            username: userInfos[otherUserId].username,
+            avatarUrl: userInfos[otherUserId].avatarUrl,
+            createdAt: data.createdAt.toDate().toLocaleString(),
+            text: data.text,
+          };
+        }
 
-        setRooms(roomsData);
-      });
+        setRooms(Object.values(roomsMap));
+      }
+    );
 
-      return () => unsubscribe();
-    };
-
-    fetchRooms();
+    return () => unsubscribe();
   }, [currentUserUid]);
 
   return (
