@@ -42,7 +42,7 @@ const RoomLink = styled(Link)`
   margin-bottom: 10px;
   padding: 10px;
   text-decoration: none;
-  color: #333;
+  color: #757575;
   transition: background-color 0.3s;
   border-radius: 8px;
   overflow: hidden;
@@ -76,7 +76,7 @@ const Avatar = styled.img`
 
 const Timestamp = styled.span`
   font-size: 12px;
-  color: #666;
+  color: #757575;
 `;
 
 interface Timestamp {
@@ -114,26 +114,33 @@ export default function ChatPage() {
         for (const docSnapshot of snapshot.docs) {
           const data = docSnapshot.data();
           const chatId = data.chatId;
-
           const otherUserId = chatId
             .replace(currentUserUid, "")
             .replace("-", "");
 
-          if (roomsMap[chatId]) continue;
-
           if (!userInfos[otherUserId]) {
-            const userSnap = await getDoc(doc(db, "users", otherUserId));
-            if (userSnap.exists()) {
-              const { name, avatarUrl } = userSnap.data();
-              userInfos[otherUserId] = {
-                username: name || "Unknown",
-                avatarUrl: avatarUrl || defaultAvatar,
-              };
-            } else {
-              userInfos[otherUserId] = {
-                username: "Unknown",
-                avatarUrl: defaultAvatar,
-              };
+            try {
+              const userSnap = await getDoc(doc(db, "users", otherUserId));
+              let username = "Unknown";
+              let avatarUrl = defaultAvatar;
+
+              if (userSnap.exists()) {
+                const userProfile = userSnap.data();
+                username = userProfile.name || "Unknown";
+
+                try {
+                  avatarUrl = await getDownloadURL(
+                    ref(storage, `avatars/${otherUserId}`)
+                  );
+                } catch (avatarError) {
+                  console.error("Error fetching avatar:", avatarError);
+                  avatarUrl = defaultAvatar;
+                }
+              }
+
+              userInfos[otherUserId] = { username, avatarUrl };
+            } catch (error) {
+              console.error("Error fetching user profile:", error);
             }
           }
 
