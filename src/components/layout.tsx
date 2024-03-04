@@ -2,17 +2,7 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { auth, db } from "../firebase";
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  onSnapshot,
-  query,
-  serverTimestamp,
-  updateDoc,
-  where,
-} from "firebase/firestore";
+import { collection, onSnapshot } from "firebase/firestore";
 
 const Wrapper = styled.div`
   display: grid;
