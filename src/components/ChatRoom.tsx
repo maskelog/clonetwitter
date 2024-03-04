@@ -1,4 +1,4 @@
-import React, { FormEvent, useEffect, useState } from "react";
+import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import styled from "styled-components";
 import {
   collection,
@@ -11,10 +11,15 @@ import {
   doc,
   serverTimestamp,
 } from "firebase/firestore";
-import { auth, db } from "../firebase";
+import { auth, db, storage } from "../firebase";
 import ChatMessage from "./ChatMessage";
 import { useNavigate } from "react-router-dom";
 import { IoIosArrowBack } from "react-icons/io";
+import {
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL,
+} from "firebase/storage";
 
 const ChatLayout = styled.div`
   display: flex;
@@ -90,6 +95,7 @@ interface IMessage {
   createdAt: Date | string;
   isSentByCurrentUser: boolean;
   read: string[];
+  imageUrl?: string;
 }
 
 interface ChatRoomProps {
@@ -100,6 +106,14 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
   const navigate = useNavigate();
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
+  const [isLoading, setLoading] = useState(false);
+  const [image, setImage] = useState<File | null>(null);
+
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setImage(e.target.files[0]);
+    }
+  };
 
   useEffect(() => {
     const messagesQuery = query(
@@ -144,18 +158,42 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
 
   const handleSend = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!auth.currentUser || newMessage.trim() === "") return;
+    if (isLoading || !auth.currentUser) return;
+    setLoading(true);
 
-    await addDoc(collection(db, "messages"), {
-      text: newMessage,
-      createdAt: serverTimestamp(),
-      chatId: userId,
-      userId: auth.currentUser.uid,
-      username: auth.currentUser.displayName || "Anonymous",
-      read: [auth.currentUser.uid],
-    });
+    let imageUrl = "";
 
-    setNewMessage("");
+    if (image) {
+      try {
+        const fileRef = storageRef(
+          storage,
+          `chatImages/${new Date().getTime()}_${image.name}`
+        );
+        const uploadResult = await uploadBytes(fileRef, image);
+        imageUrl = await getDownloadURL(uploadResult.ref);
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        setLoading(false);
+        return;
+      }
+    }
+
+    try {
+      await addDoc(collection(db, "messages"), {
+        text: newMessage,
+        chatId: userId,
+        userId: auth.currentUser.uid,
+        username: auth.currentUser.displayName || "Anonymous",
+        createdAt: serverTimestamp(),
+        imageUrl,
+      });
+      setNewMessage("");
+      setImage(null);
+    } catch (error) {
+      console.error("Error sending message:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBack = () => navigate(-1);
@@ -177,6 +215,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="메시지를 입력하세요"
           />
+          <Input type="file" onChange={handleImageChange} />
           <Button type="submit">보내기</Button>
         </MessageForm>
       </ChatContainer>

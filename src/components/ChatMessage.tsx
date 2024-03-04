@@ -77,6 +77,12 @@ const ReadStatus = styled.span`
   margin-left: 10px;
 `;
 
+const Image = styled.img`
+  max-width: 200px;
+  border-radius: 8px;
+  margin-top: 10px;
+`;
+
 interface ChatMessageProps {
   message: {
     text: string;
@@ -93,20 +99,14 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const [avatarUrl, setAvatarUrl] = useState("");
 
   useEffect(() => {
-    const fetchAvatarUrl = async () => {
-      if (message.userId) {
-        try {
-          const avatarRef = ref(storage, `avatars/${message.userId}`);
-          const url = await getDownloadURL(avatarRef);
-          setAvatarUrl(url);
-        } catch (error) {
-          console.log("Avatar image not found or error fetching:", error);
-          setAvatarUrl(defaultAvatar);
-        }
-      }
-    };
-
-    fetchAvatarUrl();
+    if (message.userId && message.userId !== auth.currentUser?.uid) {
+      const avatarRef = ref(storage, `avatars/${message.userId}`);
+      getDownloadURL(avatarRef)
+        .then(setAvatarUrl)
+        .catch(() => setAvatarUrl(defaultAvatar));
+    } else {
+      setAvatarUrl(defaultAvatar);
+    }
   }, [message.userId]);
 
   const currentUserUid = auth.currentUser?.uid;
@@ -126,6 +126,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         <MessageBubble isSentByCurrentUser={message.isSentByCurrentUser}>
           {message.text}
         </MessageBubble>
+        {message.imageUrl && <Image src={message.imageUrl} alt="Attached" />}
         <Timestamp isSentByCurrentUser={message.isSentByCurrentUser}>
           {message.createdAt}
           {isReadByCurrentUser ? (
