@@ -164,12 +164,10 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
     let imageUrl = "";
 
     if (image) {
+      const imageName = `${new Date().getTime()}_${image.name}`;
+      const imageRef = storageRef(storage, `chatImages/${imageName}`);
       try {
-        const fileRef = storageRef(
-          storage,
-          `chatImages/${new Date().getTime()}_${image.name}`
-        );
-        const uploadResult = await uploadBytes(fileRef, image);
+        const uploadResult = await uploadBytes(imageRef, image);
         imageUrl = await getDownloadURL(uploadResult.ref);
       } catch (error) {
         console.error("Error uploading image:", error);
