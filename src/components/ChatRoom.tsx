@@ -14,13 +14,14 @@ import {
 import { auth, db, storage } from "../firebase";
 import ChatMessage from "./ChatMessage";
 import { useNavigate } from "react-router-dom";
-import { IoIosArrowBack } from "react-icons/io";
 import {
   ref as storageRef,
   uploadBytes,
   getDownloadURL,
 } from "firebase/storage";
+import { IoIosArrowBack } from "react-icons/io";
 
+// 스타일링 부분
 const ChatLayout = styled.div`
   display: flex;
   width: 100vw;
@@ -87,6 +88,23 @@ const BackButton = styled.button`
   }
 `;
 
+const FileUploadButton = styled.label`
+  background-color: #007bff;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 10px;
+
+  &:hover {
+    background-color: #0056b3;
+  }
+`;
+
+const HiddenFileInput = styled.input`
+  display: none;
+`;
+
 interface IMessage {
   id: string;
   text: string;
@@ -131,14 +149,14 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
         createdAt: doc.data().createdAt.toDate().toLocaleString(),
         isSentByCurrentUser: doc.data().userId === auth.currentUser?.uid,
         read: doc.data().read || [],
+        imageUrl: doc.data().imageUrl,
       }));
 
       setMessages(updatedMessages);
-
       markMessagesAsRead(updatedMessages);
     });
 
-    return unsubscribe;
+    return () => unsubscribe();
   }, [userId]);
 
   const markMessagesAsRead = async (updatedMessages: IMessage[]) => {
@@ -213,7 +231,13 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="메시지를 입력하세요"
           />
-          <Input type="file" onChange={handleImageChange} />
+          <FileUploadButton htmlFor="file-upload">사진</FileUploadButton>
+          <HiddenFileInput
+            id="file-upload"
+            type="file"
+            onChange={handleImageChange}
+            accept="image/*"
+          />
           <Button type="submit">보내기</Button>
         </MessageForm>
       </ChatContainer>

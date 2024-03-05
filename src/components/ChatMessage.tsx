@@ -92,11 +92,12 @@ interface ChatMessageProps {
     isSentByCurrentUser: boolean;
     readByCurrentUser: boolean;
     read: string[];
+    imageUrl?: string;
   };
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
-  const [avatarUrl, setAvatarUrl] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState(defaultAvatar);
 
   useEffect(() => {
     if (message.userId && message.userId !== auth.currentUser?.uid) {
@@ -104,10 +105,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       getDownloadURL(avatarRef)
         .then(setAvatarUrl)
         .catch(() => setAvatarUrl(defaultAvatar));
-    } else {
-      setAvatarUrl(defaultAvatar);
     }
-  }, [message.userId]);
+
+    console.log("ImageUrl:", message.imageUrl);
+  }, [message.userId, message.imageUrl]);
 
   const currentUserUid = auth.currentUser?.uid;
   const isReadByCurrentUser = currentUserUid
@@ -126,7 +127,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         <MessageBubble isSentByCurrentUser={message.isSentByCurrentUser}>
           {message.text}
         </MessageBubble>
-        {message.imageUrl && <Image src={message.imageUrl} alt="Attached" />}
+        {message.imageUrl && (
+          <Image src={message.imageUrl} alt="Attached image" />
+        )}
         <Timestamp isSentByCurrentUser={message.isSentByCurrentUser}>
           {message.createdAt}
           {isReadByCurrentUser ? (
