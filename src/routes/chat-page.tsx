@@ -118,44 +118,54 @@ export default function ChatPage() {
             .replace(currentUserUid, "")
             .replace("-", "");
 
-          if (!userInfos[otherUserId]) {
-            try {
-              const userSnap = await getDoc(doc(db, "users", otherUserId));
-              let username = "Unknown";
-              let avatarUrl = defaultAvatar;
+          if (
+            !roomsMap[chatId] ||
+            roomsMap[chatId].createdAt <
+              data.createdAt.toDate().toLocaleString()
+          ) {
+            if (!userInfos[otherUserId]) {
+              try {
+                const userSnap = await getDoc(doc(db, "users", otherUserId));
+                let username = "Unknown";
+                let avatarUrl = defaultAvatar;
 
-              if (userSnap.exists()) {
-                const userProfile = userSnap.data();
-                username = userProfile.name || "Unknown";
+                if (userSnap.exists()) {
+                  const userProfile = userSnap.data();
+                  username = userProfile.name || "Unknown";
 
-                try {
-                  avatarUrl = await getDownloadURL(
-                    ref(storage, `avatars/${otherUserId}`)
-                  );
-                } catch (avatarError) {
-                  console.error("Error fetching avatar:", avatarError);
-                  avatarUrl = defaultAvatar;
+                  try {
+                    avatarUrl = await getDownloadURL(
+                      ref(storage, `avatars/${otherUserId}`)
+                    );
+                  } catch (avatarError) {
+                    console.error("Error fetching avatar:", avatarError);
+                    avatarUrl = defaultAvatar;
+                  }
                 }
+
+                userInfos[otherUserId] = { username, avatarUrl };
+              } catch (error) {
+                console.error("Error fetching user profile:", error);
               }
-
-              userInfos[otherUserId] = { username, avatarUrl };
-            } catch (error) {
-              console.error("Error fetching user profile:", error);
             }
-          }
 
-          roomsMap[chatId] = {
-            id: docSnapshot.id,
-            chatId,
-            userId: otherUserId,
-            username: userInfos[otherUserId].username,
-            avatarUrl: userInfos[otherUserId].avatarUrl,
-            createdAt: data.createdAt.toDate().toLocaleString(),
-            text: data.text,
-          };
+            roomsMap[chatId] = {
+              id: docSnapshot.id,
+              chatId,
+              userId: otherUserId,
+              username: userInfos[otherUserId].username,
+              avatarUrl: userInfos[otherUserId].avatarUrl,
+              createdAt: data.createdAt.toDate().toLocaleString(),
+              text: data.text,
+            };
+          }
         }
 
-        setRooms(Object.values(roomsMap));
+        setRooms(
+          Object.values(roomsMap).sort((a, b) =>
+            b.createdAt.localeCompare(a.createdAt)
+          )
+        );
       }
     );
 
