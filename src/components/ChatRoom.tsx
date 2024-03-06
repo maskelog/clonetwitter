@@ -21,7 +21,6 @@ import {
 } from "firebase/storage";
 import { IoIosArrowBack } from "react-icons/io";
 
-// 스타일링 부분
 const ChatLayout = styled.div`
   display: flex;
   width: 100vw;
@@ -68,6 +67,8 @@ const Button = styled.button`
   color: white;
   border-radius: 4px;
   cursor: pointer;
+  border: none;
+  padding: 10px;
 
   &:hover {
     background-color: #0056b3;
@@ -89,8 +90,9 @@ const BackButton = styled.button`
   }
 `;
 
-const FileUploadButton = styled.label`
-  background-color: #007bff;
+const FileUploadButton = styled.label<{ isImageUploaded: boolean }>`
+  background-color: ${({ isImageUploaded }) =>
+    isImageUploaded ? "#4CAF50" : "#007bff"};
   color: white;
   padding: 10px 15px;
   border-radius: 4px;
@@ -98,7 +100,8 @@ const FileUploadButton = styled.label`
   margin-right: 10px;
 
   &:hover {
-    background-color: #0056b3;
+    background-color: ${({ isImageUploaded }) =>
+      isImageUploaded ? "#45a049" : "#0056b3"};
   }
 `;
 
@@ -127,10 +130,12 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setLoading] = useState(false);
   const [image, setImage] = useState<File | null>(null);
+  const [isImageUploaded, setIsImageUploaded] = useState(false);
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setImage(e.target.files[0]);
+      setIsImageUploaded(true);
     }
   };
 
@@ -205,12 +210,17 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
         imageUrl,
       });
       setNewMessage("");
-      setImage(null);
+      resetUploadState();
     } catch (error) {
       console.error("Error sending message:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const resetUploadState = () => {
+    setImage(null);
+    setIsImageUploaded(false);
   };
 
   const handleBack = () => navigate(-1);
@@ -232,7 +242,12 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="메시지를 입력하세요"
           />
-          <FileUploadButton htmlFor="file-upload">사진</FileUploadButton>
+          <FileUploadButton
+            htmlFor="file-upload"
+            isImageUploaded={isImageUploaded}
+          >
+            사진
+          </FileUploadButton>
           <HiddenFileInput
             id="file-upload"
             type="file"
