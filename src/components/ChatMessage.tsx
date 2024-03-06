@@ -14,8 +14,7 @@ const MessageContainer = styled.div<{ isSentByCurrentUser: boolean }>`
 
 const MessageContent = styled.div<{ isSentByCurrentUser: boolean }>`
   display: flex;
-  flex-direction: ${({ isSentByCurrentUser }) =>
-    isSentByCurrentUser ? "row-reverse" : "row"};
+  flex-direction: column;
   align-items: ${({ isSentByCurrentUser }) =>
     isSentByCurrentUser ? "flex-end" : "flex-start"};
 `;
@@ -80,7 +79,7 @@ const ReadStatus = styled.span`
 const Image = styled.img`
   max-width: 200px;
   border-radius: 8px;
-  margin-top: 10px;
+  margin-bottom: 10px;
 `;
 
 interface ChatMessageProps {
@@ -124,12 +123,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         <Username>{message.username}</Username>
       </UserInfoContainer>
       <MessageContent isSentByCurrentUser={message.isSentByCurrentUser}>
-        <MessageBubble isSentByCurrentUser={message.isSentByCurrentUser}>
-          {message.text}
-        </MessageBubble>
         {message.imageUrl && (
           <Image src={message.imageUrl} alt="Attached image" />
         )}
+        <MessageBubble isSentByCurrentUser={message.isSentByCurrentUser}>
+          {message.text}
+        </MessageBubble>
         <Timestamp isSentByCurrentUser={message.isSentByCurrentUser}>
           {message.createdAt}
           {isReadByCurrentUser ? (

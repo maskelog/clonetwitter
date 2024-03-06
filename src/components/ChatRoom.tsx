@@ -26,7 +26,7 @@ const ChatLayout = styled.div`
   display: flex;
   width: 100vw;
   max-width: 800px;
-  height: 50vh;
+  height: 100vh;
   margin: 0 auto;
   overflow: hidden;
 `;
@@ -38,6 +38,7 @@ const ChatContainer = styled.div`
   flex-grow: 1;
   background-color: #f0f0f0;
   overflow: hidden;
+  height: calc(100vh - 70px);
 `;
 
 const MessagesList = styled.div`
@@ -94,7 +95,7 @@ const FileUploadButton = styled.label`
   padding: 10px 15px;
   border-radius: 4px;
   cursor: pointer;
-  margin-left: 10px;
+  margin-right: 10px;
 
   &:hover {
     background-color: #0056b3;
