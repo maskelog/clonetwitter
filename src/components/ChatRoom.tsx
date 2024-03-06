@@ -208,19 +208,15 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
         username: auth.currentUser.displayName || "Anonymous",
         createdAt: serverTimestamp(),
         imageUrl,
+        read: [auth.currentUser.uid],
       });
       setNewMessage("");
-      resetUploadState();
+      setImage(null);
     } catch (error) {
       console.error("Error sending message:", error);
     } finally {
       setLoading(false);
     }
-  };
-
-  const resetUploadState = () => {
-    setImage(null);
-    setIsImageUploaded(false);
   };
 
   const handleBack = () => navigate(-1);
