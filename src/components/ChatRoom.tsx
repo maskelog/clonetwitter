@@ -114,7 +114,7 @@ interface IMessage {
   text: string;
   userId: string;
   username: string;
-  createdAt: Date | string;
+  createdAt: string;
   isSentByCurrentUser: boolean;
   read: string[];
   imageUrl?: string;
