@@ -79,6 +79,7 @@ const Image = styled.img`
   border-radius: 8px;
   margin-bottom: 10px;
 `;
+
 interface ChatMessageProps {
   message: {
     text: string;
@@ -88,51 +89,49 @@ interface ChatMessageProps {
     isSentByCurrentUser: boolean;
     read: string[];
     imageUrl?: string;
-    chatId?: string;
   };
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const [avatarUrl, setAvatarUrl] = useState<string>(defaultAvatar);
   const currentUserUid = auth.currentUser?.uid;
-  const otherUserId =
-    message.chatId && currentUserUid
-      ? message.chatId.split("-").find((id) => id !== currentUserUid)
-      : null;
+  const isSentByCurrentUser = message.userId === currentUserUid;
+
+  const isReadByOther =
+    (isSentByCurrentUser && message.read.length > 1) ||
+    (isSentByCurrentUser &&
+      message.read.length === 1 &&
+      !message.read.includes(currentUserUid));
 
   useEffect(() => {
-    if (otherUserId) {
-      const avatarRef = ref(storage, `avatars/${otherUserId}`);
+    if (!message.isSentByCurrentUser && message.userId) {
+      const avatarRef = ref(storage, `avatars/${message.userId}`);
       getDownloadURL(avatarRef)
         .then(setAvatarUrl)
         .catch(() => setAvatarUrl(defaultAvatar));
     }
-  }, [otherUserId]);
-
-  const isUnreadByOtherUser =
-    message.userId === currentUserUid &&
-    (!message.read || !message.read.includes(otherUserId || ""));
+  }, [message.userId, message.isSentByCurrentUser]);
 
   return (
-    <MessageContainer isSentByCurrentUser={message.userId === currentUserUid}>
-      <UserInfoContainer
-        isSentByCurrentUser={message.userId === currentUserUid}
-      >
-        <Avatar isSentByCurrentUser={message.userId === currentUserUid}>
+    <MessageContainer isSentByCurrentUser={isSentByCurrentUser}>
+      <UserInfoContainer isSentByCurrentUser={isSentByCurrentUser}>
+        <Avatar isSentByCurrentUser={isSentByCurrentUser}>
           <img src={avatarUrl} alt="User avatar" />
         </Avatar>
         <Username>{message.username}</Username>
       </UserInfoContainer>
-      <MessageContent isSentByCurrentUser={message.userId === currentUserUid}>
+      <MessageContent isSentByCurrentUser={isSentByCurrentUser}>
         {message.imageUrl && (
           <Image src={message.imageUrl} alt="Attached image" />
         )}
-        <MessageBubble isSentByCurrentUser={message.userId === currentUserUid}>
+        <MessageBubble isSentByCurrentUser={isSentByCurrentUser}>
           {message.text}
         </MessageBubble>
-        <Timestamp isSentByCurrentUser={message.userId === currentUserUid}>
+        <Timestamp isSentByCurrentUser={isSentByCurrentUser}>
           {message.createdAt}
-          {isUnreadByOtherUser && <ReadStatus>읽지 않음</ReadStatus>}
+          {!isReadByOther && isSentByCurrentUser && (
+            <ReadStatus>읽지 않음</ReadStatus>
+          )}
         </Timestamp>
       </MessageContent>
     </MessageContainer>
