@@ -81,8 +81,22 @@ const Image = styled.img`
   margin-bottom: 10px;
 `;
 
+const Button = styled.button`
+  background-color: white;
+  color: black;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+  /* padding: 10px; */
+
+  &:hover {
+    background-color: #f92626;
+  }
+`;
+
 interface ChatMessageProps {
   message: {
+    id: string;
     text: string;
     userId: string;
     username: string;
@@ -113,11 +127,16 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     }
   }, [message.userId, message.isSentByCurrentUser]);
   const deleteMessage = async (messageId: string) => {
-    try {
-      await deleteDoc(doc(db, "messages", messageId));
-      console.log("Message deleted successfully");
-    } catch (error) {
-      console.log("Error deleting message:", error);
+    const isConfirmed = window.confirm(
+      "Are you sure you want to delete this message?"
+    );
+    if (isConfirmed) {
+      try {
+        await deleteDoc(doc(db, "messages", messageId));
+        console.log("Message deleted successfully");
+      } catch (error) {
+        console.log("Error deleting message:", error);
+      }
     }
   };
   return (
@@ -135,7 +154,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         <MessageBubble isSentByCurrentUser={isSentByCurrentUser}>
           {message.text}
         </MessageBubble>
-        <button onClick={() => deleteMessage(message.id)}>Delete</button>
+        {isSentByCurrentUser && (
+          <Button onClick={() => deleteMessage(message.id)}>삭제</Button>
+        )}
         <Timestamp isSentByCurrentUser={isSentByCurrentUser}>
           {message.createdAt}
           {!isReadByOther && isSentByCurrentUser && (
