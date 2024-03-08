@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { ref, getDownloadURL } from "firebase/storage";
-import { auth, storage } from "../firebase";
+import { auth, db, storage } from "../firebase";
 import defaultAvatar from "../defaultavatar.svg";
+import { deleteDoc, doc } from "firebase/firestore";
 
 const MessageContainer = styled.div<{ isSentByCurrentUser: boolean }>`
   display: flex;
@@ -111,7 +112,14 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         .catch(() => setAvatarUrl(defaultAvatar));
     }
   }, [message.userId, message.isSentByCurrentUser]);
-
+  const deleteMessage = async (messageId: string) => {
+    try {
+      await deleteDoc(doc(db, "messages", messageId));
+      console.log("Message deleted successfully");
+    } catch (error) {
+      console.log("Error deleting message:", error);
+    }
+  };
   return (
     <MessageContainer isSentByCurrentUser={isSentByCurrentUser}>
       <UserInfoContainer isSentByCurrentUser={isSentByCurrentUser}>
@@ -127,6 +135,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         <MessageBubble isSentByCurrentUser={isSentByCurrentUser}>
           {message.text}
         </MessageBubble>
+        <button onClick={() => deleteMessage(message.id)}>Delete</button>
         <Timestamp isSentByCurrentUser={isSentByCurrentUser}>
           {message.createdAt}
           {!isReadByOther && isSentByCurrentUser && (
