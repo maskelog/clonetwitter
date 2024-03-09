@@ -6,19 +6,40 @@ import { collection, onSnapshot } from "firebase/firestore";
 
 const Wrapper = styled.div`
   display: grid;
-  gap: 20px;
   grid-template-columns: 1fr 4fr;
   height: 100%;
   padding: 50px 0px;
   width: 100%;
   max-width: 860px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: unset;
+  }
 `;
 
 const Menu = styled.div`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  justify-content: space-around;
   align-items: center;
+  padding: 10px;
   gap: 20px;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
+  @media (min-width: 769px) {
+    position: relative;
+    bottom: unset;
+    left: unset;
+    width: unset;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 20px;
+  }
 `;
 
 const NotificationDot = styled.span`
