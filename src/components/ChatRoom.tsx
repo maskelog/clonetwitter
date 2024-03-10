@@ -10,6 +10,8 @@ import {
   updateDoc,
   doc,
   serverTimestamp,
+  getDoc,
+  arrayUnion,
 } from "firebase/firestore";
 import { auth, db, storage } from "../firebase";
 import ChatMessage from "./ChatMessage";
@@ -120,17 +122,80 @@ interface IMessage {
   imageUrl?: string;
 }
 
-interface ChatRoomProps {
-  userId: string;
-}
-
-const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
+const ChatRoom: React.FC<{ userId: string }> = ({ userId }) => {
   const navigate = useNavigate();
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setLoading] = useState(false);
   const [image, setImage] = useState<File | null>(null);
   const [isImageUploaded, setIsImageUploaded] = useState(false);
+
+  const markMessageAsRead = async (messageId: string, userId: string) => {
+    const messageRef = doc(db, "messages", messageId);
+    await updateDoc(messageRef, {
+      read: arrayUnion(userId),
+    });
+  };
+
+  useEffect(() => {
+    const checkRoomAccess = async () => {
+      const currentUserId = auth.currentUser?.uid;
+      if (!currentUserId) {
+        console.error("No user logged in");
+        navigate("/login");
+        return;
+      }
+
+      const chatRoomRef = doc(db, "chatRooms", userId);
+      const chatRoomSnap = await getDoc(chatRoomRef);
+
+      if (chatRoomSnap.exists()) {
+        const chatRoomData = chatRoomSnap.data();
+        if (!chatRoomData.participants.includes(currentUserId)) {
+          alert("접근 권한이 없습니다.");
+          navigate("/");
+          return;
+        }
+      } else {
+        alert("채팅방이 존재하지 않습니다.");
+        navigate("/");
+        return;
+      }
+
+      // 채팅 메시지 구독 설정
+      const messagesQuery = query(
+        collection(db, "messages"),
+        where("chatId", "==", userId),
+        orderBy("createdAt")
+      );
+
+      const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
+        const updatedMessages = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          text: doc.data().text,
+          userId: doc.data().userId,
+          username: doc.data().username,
+          createdAt: doc.data().createdAt.toDate().toLocaleString(),
+          isSentByCurrentUser: doc.data().userId === currentUserId,
+          read: doc.data().read || [],
+          imageUrl: doc.data().imageUrl,
+        }));
+
+        setMessages(updatedMessages);
+
+        // 메시지 읽음 처리
+        updatedMessages.forEach((msg) => {
+          if (!msg.isSentByCurrentUser && !msg.read.includes(currentUserId)) {
+            markMessageAsRead(msg.id, currentUserId);
+          }
+        });
+      });
+
+      return () => unsubscribe();
+    };
+
+    checkRoomAccess();
+  }, [userId, navigate]);
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -139,54 +204,16 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
     }
   };
 
-  useEffect(() => {
-    const messagesQuery = query(
-      collection(db, "messages"),
-      where("chatId", "==", userId),
-      orderBy("createdAt")
-    );
-
-    const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
-      const updatedMessages: IMessage[] = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        text: doc.data().text,
-        userId: doc.data().userId,
-        username: doc.data().username,
-        createdAt: doc.data().createdAt.toDate().toLocaleString(),
-        isSentByCurrentUser: doc.data().userId === auth.currentUser?.uid,
-        read: doc.data().read || [],
-        imageUrl: doc.data().imageUrl,
-      }));
-
-      setMessages(updatedMessages);
-      markMessagesAsRead(updatedMessages);
-    });
-
-    return () => unsubscribe();
-  }, [userId]);
-
-  const markMessagesAsRead = async (updatedMessages: IMessage[]) => {
-    const unreadMessages = updatedMessages.filter(
-      (msg) =>
-        !msg.read.includes(auth.currentUser!.uid) &&
-        msg.userId !== auth.currentUser!.uid
-    );
-
-    unreadMessages.forEach((msg) => {
-      const msgRef = doc(db, "messages", msg.id);
-      updateDoc(msgRef, {
-        read: [...msg.read, auth.currentUser!.uid],
-      });
-    });
-  };
-
   const handleSend = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (isLoading || !auth.currentUser) return;
+    const currentUserId = auth.currentUser?.uid;
+    const currentUsername = auth.currentUser?.displayName || "Anonymous";
+    if (isLoading || (!newMessage.trim() && !image) || !currentUserId) {
+      return;
+    }
     setLoading(true);
 
     let imageUrl = "";
-
     if (image) {
       const imageName = `${new Date().getTime()}_${image.name}`;
       const imageRef = storageRef(storage, `chatImages/${imageName}`);
@@ -202,16 +229,17 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ userId }) => {
 
     try {
       await addDoc(collection(db, "messages"), {
-        text: newMessage,
+        text: newMessage.trim(),
         chatId: userId,
-        userId: auth.currentUser.uid,
-        username: auth.currentUser.displayName || "Anonymous",
+        userId: currentUserId,
+        username: currentUsername,
         createdAt: serverTimestamp(),
         imageUrl,
-        read: [auth.currentUser.uid],
+        read: [currentUserId],
       });
       setNewMessage("");
       setImage(null);
+      setIsImageUploaded(false);
     } catch (error) {
       console.error("Error sending message:", error);
     } finally {
