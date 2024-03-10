@@ -2,7 +2,15 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { auth, db } from "../firebase";
-import { collection, onSnapshot } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  limit,
+  onSnapshot,
+  orderBy,
+  query,
+  where,
+} from "firebase/firestore";
 
 const Wrapper = styled.div`
   display: grid;
@@ -80,24 +88,50 @@ export default function Layout() {
 
   useEffect(() => {
     const currentUserUid = auth.currentUser?.uid;
-    if (!currentUserUid) return;
+    if (!currentUserUid) {
+      setHasNotification(false);
+      return;
+    }
 
-    const unsubscribe = onSnapshot(collection(db, "messages"), (snapshot) => {
-      let hasUnreadMessages = false;
+    const unsubscribeFromChatRooms = query(
+      collection(db, "chatRooms"),
+      where("participants", "array-contains", currentUserUid)
+    );
 
-      snapshot.docs.forEach((doc) => {
-        const data = doc.data();
-        if (data.read && !data.read.includes(currentUserUid)) {
-          // 현재 사용자의 ID가 read 배열에 포함되어있지 않으면,
-          // 현재 사용자는 이 메시지 읽지 않음
-          hasUnreadMessages = true;
+    const chatRoomsUnsubscribe = onSnapshot(
+      unsubscribeFromChatRooms,
+      async (chatRoomsSnapshot) => {
+        const userChatRoomIds = chatRoomsSnapshot.docs.map((doc) => doc.id);
+        let hasUnreadMessages = false;
+
+        for (const chatRoomId of userChatRoomIds) {
+          const messagesQuery = query(
+            collection(db, "messages"),
+            where("chatId", "==", chatRoomId),
+            orderBy("createdAt", "desc"),
+            limit(1)
+          );
+
+          const messagesUnsubscribe = onSnapshot(
+            messagesQuery,
+            (messagesSnapshot) => {
+              messagesSnapshot.forEach((doc) => {
+                const messageData = doc.data();
+                if (!messageData.read.includes(currentUserUid)) {
+                  hasUnreadMessages = true;
+                }
+              });
+
+              setHasNotification(hasUnreadMessages);
+            }
+          );
         }
-      });
+      }
+    );
 
-      setHasNotification(hasUnreadMessages);
-    });
-
-    return () => unsubscribe();
+    return () => {
+      chatRoomsUnsubscribe();
+    };
   }, []);
 
   const onLogOut = async () => {
