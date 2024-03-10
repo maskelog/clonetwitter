@@ -6,7 +6,14 @@ import {
   uploadBytes,
   deleteObject,
 } from "firebase/storage";
-import { deleteDoc, doc, updateDoc } from "firebase/firestore";
+import {
+  deleteDoc,
+  doc,
+  getDoc,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+} from "firebase/firestore";
 import { auth, db, storage } from "../firebase";
 import { ITweet } from "./timeline";
 import { useNavigate } from "react-router-dom";
@@ -160,12 +167,33 @@ export default function Tweet({ id, userId, username, tweet, photo }: ITweet) {
 
   const navigate = useNavigate();
 
-  const handleUsernameClick = () => {
+  const handleUsernameClick = async () => {
     const myUserId = auth.currentUser?.uid;
     const otherUserId = userId;
+
+    if (!myUserId || !otherUserId) {
+      alert("로그인 상태를 확인해주세요.");
+      return;
+    }
+
+    // 사용자 ID를 알파벳 순으로 정렬하여 채팅방 ID 생성
     const sortedUserIds = [myUserId, otherUserId].sort();
-    const chatPath = `chat/${sortedUserIds.join("-")}`;
-    navigate(`/${chatPath}`);
+    const chatId = sortedUserIds.join("-");
+
+    // 채팅방 존재 여부 확인
+    const chatRoomRef = doc(db, "chatRooms", chatId);
+    const chatRoomSnap = await getDoc(chatRoomRef);
+
+    // 채팅방이 없으면 생성
+    if (!chatRoomSnap.exists()) {
+      await setDoc(chatRoomRef, {
+        participants: [myUserId, otherUserId],
+        createdAt: serverTimestamp(),
+      });
+    }
+
+    // 생성된 채팅방으로 이동
+    navigate(`/chat/${chatId}`);
   };
 
   return (
