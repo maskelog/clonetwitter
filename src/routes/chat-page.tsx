@@ -10,6 +10,8 @@ import {
   orderBy,
   doc,
   getDoc,
+  where,
+  getDocs,
 } from "firebase/firestore";
 import defaultAvatar from "../defaultavatar.svg";
 import ChatRoom from "../components/ChatRoom";
@@ -111,9 +113,24 @@ export default function ChatPage() {
           [key: string]: { username: string; avatarUrl: string };
         } = {};
 
+        // 현재 사용자의 채팅방 목록을 가져오기 위한 추가 쿼리
+        const chatRoomsQuery = query(
+          collection(db, "chatRooms"),
+          where("participants", "array-contains", currentUserUid)
+        );
+
+        const chatRoomsSnapshot = await getDocs(chatRoomsQuery);
+        const userChatRoomIds = chatRoomsSnapshot.docs.map((doc) => doc.id);
+
         for (const docSnapshot of snapshot.docs) {
           const data = docSnapshot.data();
           const chatId = data.chatId;
+
+          // 사용자가 참여하고 있는 채팅방만 처리
+          if (!userChatRoomIds.includes(chatId)) {
+            continue;
+          }
+
           const otherUserId = chatId
             .replace(currentUserUid, "")
             .replace("-", "");
