@@ -13,13 +13,16 @@ import styled from "styled-components";
 import ProtectedRoute from "./components/protected-route";
 import ForgotPassword from "./routes/forgot-password";
 import ChatPage from "./routes/chat-page";
+import { NotificationProvider } from "./components/NotificationContext";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: (
       <ProtectedRoute>
-        <Layout />
+        <NotificationProvider>
+          <Layout />
+        </NotificationProvider>
       </ProtectedRoute>
     ),
     children: [
