@@ -13,7 +13,7 @@ import styled from "styled-components";
 import ProtectedRoute from "./components/protected-route";
 import ForgotPassword from "./routes/forgot-password";
 import ChatPage from "./routes/chat-page";
-import { NotificationProvider } from "./components/NotificationContext";
+import { NotificationProvider } from "./components/NotificationProvider";
 
 const router = createBrowserRouter([
   {
@@ -27,7 +27,14 @@ const router = createBrowserRouter([
     ),
     children: [
       { path: "", element: <Home /> },
-      { path: "profile", element: <Profile /> },
+      {
+        path: "/profile",
+        element: <Profile />,
+      },
+      {
+        path: "/profile/:userId",
+        element: <Profile />,
+      },
       {
         path: "chat",
         element: <ChatPage />,
