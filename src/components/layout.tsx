@@ -1,17 +1,7 @@
-import { useEffect, useState } from "react";
-import { useNotifications } from "./NotificationContext";
 import styled from "styled-components";
 import { Link, Outlet, useNavigate } from "react-router-dom";
-import { auth, db } from "../firebase";
-import {
-  collection,
-  getDocs,
-  limit,
-  onSnapshot,
-  orderBy,
-  query,
-  where,
-} from "firebase/firestore";
+import { auth } from "../firebase";
+import { useNotifications } from "./NotificationProvider";
 
 const Wrapper = styled.div`
   display: grid;
@@ -82,58 +72,6 @@ const MenuItem = styled.div`
     }
   }
 `;
-
-// export default function Layout() {
-//   const navigate = useNavigate();
-//   const [hasNotification, setHasNotification] = useState(false);
-
-//   useEffect(() => {
-//     const currentUserUid = auth.currentUser?.uid;
-//     if (!currentUserUid) {
-//       setHasNotification(false);
-//       return;
-//     }
-
-//     const unsubscribeFromChatRooms = query(
-//       collection(db, "chatRooms"),
-//       where("participants", "array-contains", currentUserUid)
-//     );
-
-//     const chatRoomsUnsubscribe = onSnapshot(
-//       unsubscribeFromChatRooms,
-//       async (chatRoomsSnapshot) => {
-//         const userChatRoomIds = chatRoomsSnapshot.docs.map((doc) => doc.id);
-//         let hasUnreadMessages = false;
-
-//         for (const chatRoomId of userChatRoomIds) {
-//           const messagesQuery = query(
-//             collection(db, "messages"),
-//             where("chatId", "==", chatRoomId),
-//             orderBy("createdAt", "desc"),
-//             limit(1)
-//           );
-
-//           const messagesUnsubscribe = onSnapshot(
-//             messagesQuery,
-//             (messagesSnapshot) => {
-//               messagesSnapshot.forEach((doc) => {
-//                 const messageData = doc.data();
-//                 if (!messageData.read.includes(currentUserUid)) {
-//                   hasUnreadMessages = true;
-//                 }
-//               });
-
-//               setHasNotification(hasUnreadMessages);
-//             }
-//           );
-//         }
-//       }
-//     );
-
-//     return () => {
-//       chatRoomsUnsubscribe();
-//     };
-//   }, []);
 
 const Layout: React.FC = () => {
   const navigate = useNavigate();
