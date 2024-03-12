@@ -27,8 +27,8 @@ const Wrapper = styled.div`
   gap: 20px;
 `;
 
-const AvatarUpload = styled.label`
-  cursor: pointer;
+const AvatarUpload = styled.label<AvatarUploadProps>`
+  cursor: ${(props) => (props.isEditable ? "pointer" : "default")};
   display: inline-block;
   overflow: hidden;
   position: relative;
@@ -81,6 +81,10 @@ export interface ITweet {
   userId: string;
   username: string;
   createdAt: number;
+}
+
+interface AvatarUploadProps {
+  isEditable: boolean;
 }
 
 interface UserProfile {
@@ -155,7 +159,12 @@ const Profile: React.FC = () => {
   // 아바타 변경 처리
   const handleAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !auth.currentUser) return;
+    if (
+      !file ||
+      !auth.currentUser ||
+      (userId && userId !== auth.currentUser.uid)
+    )
+      return;
 
     const avatarRef = ref(storage, `avatars/${auth.currentUser.uid}`);
     const uploadResult = await uploadBytes(avatarRef, file);
@@ -203,15 +212,26 @@ const Profile: React.FC = () => {
 
   return (
     <Wrapper>
-      <AvatarUpload onClick={() => avatarInputRef.current?.click()}>
+      <AvatarUpload
+        isEditable={userId === auth.currentUser?.uid}
+        onClick={() => {
+          if (userId === auth.currentUser?.uid) {
+            avatarInputRef.current?.click();
+          }
+        }}
+      >
         <img src={avatar} alt="Avatar" />
-        <AvatarInput
-          type="file"
-          accept="image/*"
-          ref={avatarInputRef}
-          onChange={handleAvatarChange}
-        />
+        {userId === auth.currentUser?.uid && (
+          <AvatarInput
+            type="file"
+            accept="image/*"
+            ref={avatarInputRef}
+            onChange={handleAvatarChange}
+            style={{ display: "none" }}
+          />
+        )}
       </AvatarUpload>
+
       {isEditing ? (
         <>
           <EditInput value={newUsername} onChange={handleUsernameChange} />
