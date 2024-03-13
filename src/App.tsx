@@ -14,7 +14,7 @@ import ProtectedRoute from "./components/protected-route";
 import ForgotPassword from "./routes/forgot-password";
 import ChatPage from "./routes/chat-page";
 import { NotificationProvider } from "./components/NotificationProvider";
-import TweetDetail from "./components/twwetDetail";
+import TweetDetail from "./components/tweetDetail";
 
 const router = createBrowserRouter([
   {
