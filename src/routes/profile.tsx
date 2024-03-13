@@ -144,10 +144,13 @@ const Profile: React.FC = () => {
         limit(10)
       );
       const querySnapshot = await getDocs(tweetsRef);
-      const tweetsData = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...(doc.data() as ITweet),
-      }));
+      const tweetsData = querySnapshot.docs.map((doc) => {
+        const { id, ...tweetData } = doc.data() as ITweet;
+        return {
+          id: doc.id,
+          ...tweetData,
+        };
+      });
       setTweets(tweetsData);
     };
 
