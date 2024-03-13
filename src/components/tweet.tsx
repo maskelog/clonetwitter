@@ -20,6 +20,8 @@ const Wrapper = styled.div`
   margin-bottom: 20px;
   background-color: #000;
   color: #fff;
+  position: relative;
+  padding-bottom: 60px;
 `;
 
 const TextArea = styled.textarea`
@@ -127,10 +129,25 @@ const ButtonsContainer = styled.div`
   margin-top: 10px;
 `;
 
+const ShareButton = styled.button`
+  border: none;
+  background: none;
+  color: white;
+  cursor: pointer;
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  padding: 5px;
+  &:hover,
+  &:active {
+    opacity: 0.8;
+  }
+`;
+
 const ShareIcon = styled.svg`
   width: 24px;
   height: 24px;
-  margin-right: 5px;
+  margin-right: 10px;
 `;
 
 export default function Tweet({ id, userId, username, tweet, photo }: ITweet) {
@@ -238,7 +255,7 @@ export default function Tweet({ id, userId, username, tweet, photo }: ITweet) {
           onClick={() => window.open(photo, "_blank")}
         />
       )}
-      <Button className="share" onClick={handleShare}>
+      <ShareButton className="share" onClick={handleShare}>
         <ShareIcon
           fill="none"
           strokeWidth={1.5}
@@ -253,7 +270,7 @@ export default function Tweet({ id, userId, username, tweet, photo }: ITweet) {
             d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z"
           />
         </ShareIcon>
-      </Button>
+      </ShareButton>
     </Wrapper>
   );
 }
