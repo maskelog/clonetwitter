@@ -6,14 +6,7 @@ import {
   uploadBytes,
   deleteObject,
 } from "firebase/storage";
-import {
-  deleteDoc,
-  doc,
-  getDoc,
-  serverTimestamp,
-  setDoc,
-  updateDoc,
-} from "firebase/firestore";
+import { deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { auth, db, storage } from "../firebase";
 import { ITweet } from "./timeline";
 import { useNavigate } from "react-router-dom";

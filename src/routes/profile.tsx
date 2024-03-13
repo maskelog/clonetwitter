@@ -98,7 +98,6 @@ const Profile: React.FC = () => {
   const { userId: paramUserId } = useParams<{ userId?: string }>();
   const currentUser = auth.currentUser;
   const userId = paramUserId || currentUser?.uid;
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [avatar, setAvatar] = useState<string>(defaultAvatar);
   const [newUsername, setNewUsername] = useState<string>("");
   const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -112,7 +111,6 @@ const Profile: React.FC = () => {
         const userSnap = await getDoc(userRef);
         if (userSnap.exists()) {
           const userData = userSnap.data() as UserProfile;
-          setUserProfile(userData);
           setNewUsername(userData.displayName || "");
 
           try {
