@@ -127,6 +127,12 @@ const ButtonsContainer = styled.div`
   margin-top: 10px;
 `;
 
+const ShareIcon = styled.svg`
+  width: 24px;
+  height: 24px;
+  margin-right: 5px;
+`;
+
 export default function Tweet({ id, userId, username, tweet, photo }: ITweet) {
   const [showMenu, setShowMenu] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -160,38 +166,21 @@ export default function Tweet({ id, userId, username, tweet, photo }: ITweet) {
 
   const navigate = useNavigate();
 
-  // const handleUsernameClick = async () => {
-  //   const myUserId = auth.currentUser?.uid;
-  //   const otherUserId = userId;
-
-  //   if (!myUserId || !otherUserId) {
-  //     alert("로그인 상태를 확인해주세요.");
-  //     return;
-  //   }
-
-  //   // 사용자 ID를 알파벳 순으로 정렬하여 채팅방 ID 생성
-  //   const sortedUserIds = [myUserId, otherUserId].sort();
-  //   const chatId = sortedUserIds.join("-");
-
-  //   // 채팅방 존재 여부 확인
-  //   const chatRoomRef = doc(db, "chatRooms", chatId);
-  //   const chatRoomSnap = await getDoc(chatRoomRef);
-
-  //   // 채팅방이 없으면 생성
-  //   if (!chatRoomSnap.exists()) {
-  //     await setDoc(chatRoomRef, {
-  //       participants: [myUserId, otherUserId],
-  //       createdAt: serverTimestamp(),
-  //     });
-  //   }
-
-  //   // 생성된 채팅방으로 이동
-  //   navigate(`/chat/${chatId}`);
-  // };
-
   const handleUsernameClick = () => {
     // 사용자 ID로 프로필 페이지로 이동
     navigate(`/profile/${userId}`);
+  };
+
+  const handleShare = async () => {
+    try {
+      const tweetUrl = `https://nwitter-reloaded-5757c.firebaseapp.com/tweets/${id}`;
+
+      await navigator.clipboard.writeText(tweetUrl);
+      alert("Tweet link copied to clipboard!");
+    } catch (err) {
+      console.error("Failed to copy: ", err);
+      alert("Failed to copy tweet link to clipboard.");
+    }
   };
 
   return (
@@ -249,6 +238,22 @@ export default function Tweet({ id, userId, username, tweet, photo }: ITweet) {
           onClick={() => window.open(photo, "_blank")}
         />
       )}
+      <Button className="share" onClick={handleShare}>
+        <ShareIcon
+          fill="none"
+          strokeWidth={1.5}
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z"
+          />
+        </ShareIcon>
+      </Button>
     </Wrapper>
   );
 }
