@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import firebase from "firebase/compat/app";
 
 interface ITweet {
@@ -14,7 +14,8 @@ interface ITweet {
 }
 
 interface WrapperProps {
-  dynamicHeight: string;
+  hasPhoto: boolean;
+  contentLength: number;
 }
 
 const Wrapper = styled.div<WrapperProps>`
@@ -27,9 +28,14 @@ const Wrapper = styled.div<WrapperProps>`
   background-color: #000;
   color: #fff;
   position: relative;
-  min-height: ${({ dynamicHeight }) => dynamicHeight};
-  width: 100%;
-  max-width: 600px;
+  ${({ hasPhoto, contentLength }) =>
+    hasPhoto || contentLength > 100
+      ? css`
+          min-height: 300px;
+        `
+      : css`
+          min-height: 100px;
+        `}
 `;
 
 const Username = styled.h2`
@@ -119,19 +125,11 @@ const TweetDetail: React.FC = () => {
     }
   };
 
-  const calculateMinHeight = () => {
-    if (!tweet) return "100px";
-    const hasPhoto = !!tweet.photo;
-    const isShortTweet = tweet.tweet.length < 50;
-
-    if (isShortTweet && !hasPhoto) {
-      return "100px";
-    }
-    return "auto";
-  };
+  const hasPhoto = !!tweet?.photo;
+  const contentLength = tweet?.tweet.length ?? 0;
 
   return (
-    <Wrapper dynamicHeight={calculateMinHeight()}>
+    <Wrapper hasPhoto={hasPhoto} contentLength={contentLength}>
       {tweet ? (
         <>
           <Username>@{tweet.username}</Username>
