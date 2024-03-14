@@ -188,6 +188,10 @@ export default function Tweet({ id, userId, username, tweet, photo }: ITweet) {
     navigate(`/profile/${userId}`);
   };
 
+  const handleTweetClick = () => {
+    navigate(`/tweets/${id}`); // 트윗 상세 페이지로 이동
+  };
+
   const handleShare = async () => {
     try {
       const tweetUrl = `https://nwitter-reloaded-5757c.firebaseapp.com/tweets/${id}`;
@@ -201,7 +205,7 @@ export default function Tweet({ id, userId, username, tweet, photo }: ITweet) {
   };
 
   return (
-    <Wrapper>
+    <Wrapper onClick={handleTweetClick}>
       <Column>
         <Username onClick={handleUsernameClick}>{username}</Username>
         {auth.currentUser?.uid === userId && (
