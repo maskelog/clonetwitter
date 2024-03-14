@@ -14,8 +14,7 @@ interface ITweet {
 }
 
 interface WrapperProps {
-  hasPhoto: boolean;
-  isSingleLine: boolean;
+  dynamicHeight: string;
 }
 
 const Wrapper = styled.div<WrapperProps>`
@@ -28,11 +27,9 @@ const Wrapper = styled.div<WrapperProps>`
   background-color: #000;
   color: #fff;
   position: relative;
-  min-height: ${({ isSingleLine, hasPhoto }) =>
-    isSingleLine && !hasPhoto ? "100px" : "auto"};
-  min-width: 300px;
+  min-height: ${({ dynamicHeight }) => dynamicHeight};
+  width: 100%;
   max-width: 600px;
-  box-sizing: border-box;
 `;
 
 const Username = styled.h2`
@@ -49,9 +46,15 @@ const Content = styled.p`
 `;
 
 const Photo = styled.img`
-  max-width: 100%;
+  max-width: 50%;
   border-radius: 8px;
   margin-top: 10px;
+`;
+
+const Footer = styled.div`
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
 `;
 
 const ShareButton = styled.button`
@@ -59,7 +62,6 @@ const ShareButton = styled.button`
   background: none;
   color: white;
   cursor: pointer;
-  position: absolute;
   bottom: 10px;
   right: 10px;
   padding: 5px;
@@ -117,32 +119,42 @@ const TweetDetail: React.FC = () => {
     }
   };
 
-  const isSingleLine = (tweet?.tweet.length ?? 0) < 100;
-  const hasPhoto = !!tweet?.photo;
+  const calculateMinHeight = () => {
+    if (!tweet) return "100px";
+    const hasPhoto = !!tweet.photo;
+    const isShortTweet = tweet.tweet.length < 50;
+
+    if (isShortTweet && !hasPhoto) {
+      return "100px";
+    }
+    return "auto";
+  };
 
   return (
-    <Wrapper hasPhoto={hasPhoto} isSingleLine={isSingleLine}>
+    <Wrapper dynamicHeight={calculateMinHeight()}>
       {tweet ? (
         <>
           <Username>@{tweet.username}</Username>
           <Content>{tweet.tweet}</Content>
           {tweet.photo && <Photo src={tweet.photo} alt="Tweet image" />}
-          <ShareButton onClick={handleShare}>
-            <ShareIcon
-              fill="none"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z"
-              />
-            </ShareIcon>
-          </ShareButton>
+          <Footer>
+            <ShareButton onClick={handleShare}>
+              <ShareIcon
+                fill="none"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z"
+                />
+              </ShareIcon>
+            </ShareButton>
+          </Footer>
         </>
       ) : (
         <Content>Tweet not found</Content>
