@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
+import styled from "styled-components";
 import firebase from "firebase/compat/app";
-import { styled } from "styled-components";
 
 interface ITweet {
   id: string;
@@ -13,7 +13,12 @@ interface ITweet {
   createdAt: firebase.firestore.Timestamp;
 }
 
-const Wrapper = styled.div`
+interface WrapperProps {
+  hasPhoto: boolean;
+  isSingleLine: boolean;
+}
+
+const Wrapper = styled.div<WrapperProps>`
   display: flex;
   flex-direction: column;
   padding: 20px;
@@ -23,7 +28,11 @@ const Wrapper = styled.div`
   background-color: #000;
   color: #fff;
   position: relative;
-  padding-bottom: 60px;
+  min-height: ${({ isSingleLine, hasPhoto }) =>
+    isSingleLine && !hasPhoto ? "100px" : "auto"};
+  min-width: 300px;
+  max-width: 600px;
+  box-sizing: border-box;
 `;
 
 const Username = styled.h2`
@@ -35,8 +44,8 @@ const Username = styled.h2`
 
 const Content = styled.p`
   font-size: 14px;
-  margin-top: 10px;
   color: #fff;
+  margin: 10px 0;
 `;
 
 const Photo = styled.img`
@@ -54,6 +63,8 @@ const ShareButton = styled.button`
   bottom: 10px;
   right: 10px;
   padding: 5px;
+  display: flex;
+  align-items: center;
   &:hover,
   &:active {
     opacity: 0.8;
@@ -63,11 +74,11 @@ const ShareButton = styled.button`
 const ShareIcon = styled.svg`
   width: 24px;
   height: 24px;
-  margin-right: 10px;
+  margin-right: 5px;
 `;
 
 const TweetDetail: React.FC = () => {
-  const { tweetId } = useParams<{ tweetId: string }>();
+  const { tweetId } = useParams<{ tweetId?: string }>();
   const [tweet, setTweet] = useState<ITweet | null>(null);
 
   useEffect(() => {
@@ -76,11 +87,10 @@ const TweetDetail: React.FC = () => {
         const tweetRef = doc(db, "tweets", tweetId);
         const tweetSnap = await getDoc(tweetRef);
         if (tweetSnap.exists()) {
-          const tweetData = tweetSnap.data() as Omit<ITweet, "id">;
+          const data = tweetSnap.data() as Omit<ITweet, "id">;
           setTweet({
             id: tweetSnap.id,
-            ...tweetData,
-            createdAt: tweetData.createdAt,
+            ...data,
           });
         } else {
           console.log("No such tweet!");
@@ -98,11 +108,7 @@ const TweetDetail: React.FC = () => {
     }
 
     try {
-      // 트윗 상세 페이지의 URL을 생성합니다.
-      // 이때 `tweet.id`를 사용하여 정확한 트윗의 경로를 지정합니다.
       const tweetUrl = `https://nwitter-reloaded-5757c.firebaseapp.com/tweets/${tweet.id}`;
-
-      // 생성한 URL을 클립보드에 복사합니다.
       await navigator.clipboard.writeText(tweetUrl);
       alert("Tweet link copied to clipboard!");
     } catch (err) {
@@ -111,33 +117,36 @@ const TweetDetail: React.FC = () => {
     }
   };
 
+  const isSingleLine = (tweet?.tweet.length ?? 0) < 100;
+  const hasPhoto = !!tweet?.photo;
+
   return (
-    <Wrapper>
+    <Wrapper hasPhoto={hasPhoto} isSingleLine={isSingleLine}>
       {tweet ? (
         <>
           <Username>@{tweet.username}</Username>
           <Content>{tweet.tweet}</Content>
-          {tweet.photo && <Photo src={tweet.photo} alt="Tweet" />}
+          {tweet.photo && <Photo src={tweet.photo} alt="Tweet image" />}
+          <ShareButton onClick={handleShare}>
+            <ShareIcon
+              fill="none"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z"
+              />
+            </ShareIcon>
+          </ShareButton>
         </>
       ) : (
         <Content>Tweet not found</Content>
       )}
-      <ShareButton className="share" onClick={handleShare}>
-        <ShareIcon
-          fill="none"
-          strokeWidth={1.5}
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z"
-          />
-        </ShareIcon>
-      </ShareButton>
     </Wrapper>
   );
 };
