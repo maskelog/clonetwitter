@@ -9,7 +9,7 @@ import {
   doc,
   getDoc,
 } from "firebase/firestore";
-import Tweet, { ITweet } from "../components/tweet"; // ITweet 인터페이스 임포트 위치 확인
+import Tweet, { ITweet } from "../components/tweet";
 
 const Wrapper = styled.div`
   display: flex;

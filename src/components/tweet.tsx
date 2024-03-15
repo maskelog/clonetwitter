@@ -165,17 +165,18 @@ const BookmarkIcon = styled(ActionIcon)<{ isBookmarked: boolean }>`
         `}
 `;
 
-interface ITweetProps {
+export interface ITweet {
   id: string;
+  photo: string;
+  tweet: string;
   userId: string;
   username: string;
-  tweet: string;
-  photo?: string;
+  createdAt: number;
   isBookmarked: boolean;
-  onBookmarkToggle: (tweetId: string) => Promise<void>;
+  onBookmarkToggle: () => void;
 }
 
-const Tweet: React.FC<ITweetProps> = ({
+const Tweet: React.FC<ITweet> = ({
   id,
   userId,
   username,
