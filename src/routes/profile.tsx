@@ -17,7 +17,7 @@ import {
 } from "firebase/firestore";
 import { updateProfile } from "firebase/auth";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import Tweet from "../components/tweet";
+import Tweet, { ITweet } from "../components/tweet";
 import defaultAvatar from "../defaultavatar.svg";
 
 const Wrapper = styled.div`
@@ -73,15 +73,6 @@ const Button = styled.button`
 const TweetsList = styled.div`
   width: 100%;
 `;
-
-export interface ITweet {
-  id: string;
-  photo: string;
-  tweet: string;
-  userId: string;
-  username: string;
-  createdAt: number;
-}
 
 interface AvatarUploadProps {
   isEditable: boolean;
