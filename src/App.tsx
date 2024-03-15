@@ -15,6 +15,7 @@ import ForgotPassword from "./routes/forgot-password";
 import ChatPage from "./routes/chat-page";
 import { NotificationProvider } from "./components/NotificationProvider";
 import TweetDetail from "./components/tweetDetail";
+import BookmarkPage from "./routes/bookmark-page";
 
 const router = createBrowserRouter([
   {
@@ -42,6 +43,10 @@ const router = createBrowserRouter([
         children: [{ path: ":roomId", element: <ChatPage /> }],
       },
       { path: "tweets/:tweetId", element: <TweetDetail /> },
+      {
+        path: "/BookmarkPage",
+        element: <BookmarkPage />,
+      },
     ],
   },
   { path: "/login", element: <Login /> },
