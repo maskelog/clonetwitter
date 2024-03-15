@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import styled, { css } from "styled-components";
 import {
   getDownloadURL,
@@ -8,7 +8,6 @@ import {
 } from "firebase/storage";
 import { deleteDoc, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { auth, db, storage } from "../firebase";
-import { ITweet } from "./timeline";
 import { useNavigate } from "react-router-dom";
 
 const Wrapper = styled.div`
@@ -159,36 +158,37 @@ const BookmarkIcon = styled(ActionIcon)<{ isBookmarked: boolean }>`
   ${(props) =>
     props.isBookmarked
       ? css`
-          fill: #f0b90b; // 북마크 되어있을 때
+          fill: #f0b90b;
         `
       : css`
-          fill: none; // 북마크 되어있지 않을 때
+          fill: none;
         `}
 `;
 
-const Tweet = ({ id, userId, username, tweet, photo }: ITweet) => {
+interface ITweetProps {
+  id: string;
+  userId: string;
+  username: string;
+  tweet: string;
+  photo?: string;
+  isBookmarked: boolean;
+  onBookmarkToggle: (tweetId: string) => Promise<void>;
+}
+
+const Tweet: React.FC<ITweetProps> = ({
+  id,
+  userId,
+  username,
+  tweet,
+  photo,
+  isBookmarked,
+}) => {
   const [showMenu, setShowMenu] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editTweet, setEditTweet] = useState(tweet);
+  const [bookmarked, setBookmarked] = useState(isBookmarked);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isBookmarked, setIsBookmarked] = useState(false);
 
-  useEffect(() => {
-    // 컴포넌트가 마운트될 때 북마크 상태 확인
-    const checkBookmarkStatus = async () => {
-      const bookmarkRef = doc(
-        db,
-        "bookmarks",
-        `${auth.currentUser?.uid}_${id}`
-      );
-      const bookmarkSnap = await getDoc(bookmarkRef);
-      setIsBookmarked(bookmarkSnap.exists());
-    };
-
-    checkBookmarkStatus();
-  }, [id]);
-
-  // Event Handlers
   const handleMenuToggle = () => setShowMenu(!showMenu);
   const handleDelete = async () => {
     if (window.confirm("Are you sure you want to delete this tweet?")) {
@@ -241,21 +241,26 @@ const Tweet = ({ id, userId, username, tweet, photo }: ITweet) => {
     event.stopPropagation();
   };
 
-  const handleBookmarkToggle = async (
-    event: React.MouseEvent<HTMLButtonElement>
-  ) => {
-    event.stopPropagation();
-    const bookmarkRef = doc(db, "bookmarks", `${auth.currentUser?.uid}_${id}`);
-    const bookmarkSnap = await getDoc(bookmarkRef);
-    if (bookmarkSnap.exists()) {
-      await deleteDoc(bookmarkRef);
-      setIsBookmarked(false);
-    } else {
-      await setDoc(bookmarkRef, {
-        userId: auth.currentUser?.uid,
-        tweetId: id,
-      });
-      setIsBookmarked(true);
+  const handleBookmarkToggle = async () => {
+    try {
+      const userUid = auth.currentUser?.uid;
+      if (!userUid) {
+        console.error("User is not logged in");
+        return;
+      }
+
+      const bookmarkRef = doc(db, "bookmarks", `${userUid}_${id}`);
+      const bookmarkSnap = await getDoc(bookmarkRef);
+
+      if (bookmarkSnap.exists()) {
+        await deleteDoc(bookmarkRef);
+        setBookmarked(false); // 북마크 제거 시 상태 업데이트
+      } else {
+        await setDoc(bookmarkRef, { userId: userUid, tweetId: id });
+        setBookmarked(true); // 북마크 추가 시 상태 업데이트
+      }
+    } catch (error) {
+      console.error("Failed to toggle bookmark:", error);
     }
   };
 
@@ -315,9 +320,15 @@ const Tweet = ({ id, userId, username, tweet, photo }: ITweet) => {
         />
       )}
       <ButtonsContainer onClick={handleButtonClick}>
-        <ActionButton className="Bookmark" onClick={handleBookmarkToggle}>
+        <ActionButton
+          className="Bookmark"
+          onClick={(event) => {
+            event.stopPropagation();
+            handleBookmarkToggle();
+          }}
+        >
           <BookmarkIcon
-            isBookmarked={isBookmarked}
+            isBookmarked={bookmarked}
             fill="none"
             strokeWidth={1.5}
             stroke="currentColor"
@@ -330,7 +341,6 @@ const Tweet = ({ id, userId, username, tweet, photo }: ITweet) => {
               strokeLinejoin="round"
               d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
             />
-            북마크
           </BookmarkIcon>
         </ActionButton>
         <ActionButton className="share" onClick={handleShare}>
