@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import styled, { css } from "styled-components";
 import {
   getDownloadURL,
@@ -188,6 +188,19 @@ const Tweet: React.FC<ITweetProps> = ({
   const [editTweet, setEditTweet] = useState(tweet);
   const [bookmarked, setBookmarked] = useState(isBookmarked);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const checkBookmarkStatus = async () => {
+      const userUid = auth.currentUser?.uid;
+      if (userUid) {
+        const bookmarkRef = doc(db, "bookmarks", `${userUid}_${id}`);
+        const bookmarkSnap = await getDoc(bookmarkRef);
+        setBookmarked(bookmarkSnap.exists());
+      }
+    };
+
+    checkBookmarkStatus();
+  }, [id]);
 
   const handleMenuToggle = () => setShowMenu(!showMenu);
   const handleDelete = async () => {
