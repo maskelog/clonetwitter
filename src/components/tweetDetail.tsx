@@ -1,24 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "../firebase";
+import { deleteDoc, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { auth, db } from "../firebase";
 import styled, { css } from "styled-components";
-import firebase from "firebase/compat/app";
+import { ITweet } from "./tweet";
 
-interface ITweet {
-  id: string;
-  username: string;
-  tweet: string;
-  photo?: string;
-  createdAt: firebase.firestore.Timestamp;
-}
-
-interface WrapperProps {
-  hasPhoto: boolean;
-  contentLength: number;
-}
-
-const Wrapper = styled.div<WrapperProps>`
+const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
   padding: 20px;
@@ -28,14 +15,6 @@ const Wrapper = styled.div<WrapperProps>`
   background-color: #000;
   color: #fff;
   position: relative;
-  ${({ hasPhoto, contentLength }) =>
-    hasPhoto || contentLength > 100
-      ? css`
-          min-height: 300px;
-        `
-      : css`
-          min-height: 100px;
-        `}
 `;
 
 const Username = styled.h2`
@@ -85,28 +64,63 @@ const ShareIcon = styled.svg`
   margin-right: 5px;
 `;
 
+const BookmarkButton = styled.button`
+  border: none;
+  background: none;
+  color: white;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  &:hover,
+  &:active {
+    opacity: 0.8;
+  }
+`;
+
+const ActionIcon = styled.svg`
+  width: 24px;
+  height: 24px;
+  margin-right: 5px;
+`;
+
+const BookmarkIcon = styled(ActionIcon)<{ isBookmarked: boolean }>`
+  ${(props) =>
+    props.isBookmarked
+      ? css`
+          fill: #f0b90b;
+        `
+      : css`
+          fill: none;
+        `}
+`;
+
 const TweetDetail: React.FC = () => {
   const { tweetId } = useParams<{ tweetId?: string }>();
   const [tweet, setTweet] = useState<ITweet | null>(null);
+  const [isBookmarked, setIsBookmarked] = useState<boolean>(false);
 
   useEffect(() => {
-    const fetchTweet = async () => {
-      if (tweetId) {
-        const tweetRef = doc(db, "tweets", tweetId);
-        const tweetSnap = await getDoc(tweetRef);
-        if (tweetSnap.exists()) {
-          const data = tweetSnap.data() as Omit<ITweet, "id">;
-          setTweet({
-            id: tweetSnap.id,
-            ...data,
-          });
-        } else {
-          console.log("No such tweet!");
-        }
+    const fetchTweetAndBookmarkStatus = async () => {
+      if (!tweetId) return;
+
+      const tweetRef = doc(db, "tweets", tweetId);
+      const tweetSnap = await getDoc(tweetRef);
+      if (tweetSnap.exists()) {
+        const data = tweetSnap.data() as Omit<ITweet, "id">;
+        setTweet({ id: tweetSnap.id, ...data });
+
+        // 북마크 상태 확인
+        const userUid = auth.currentUser?.uid;
+        const bookmarkRef = doc(db, "bookmarks", `${userUid}_${tweetId}`);
+        const bookmarkSnap = await getDoc(bookmarkRef);
+        setIsBookmarked(bookmarkSnap.exists());
+      } else {
+        console.log("No such tweet!");
       }
     };
 
-    fetchTweet();
+    fetchTweetAndBookmarkStatus();
   }, [tweetId]);
 
   const handleShare = async () => {
@@ -125,17 +139,55 @@ const TweetDetail: React.FC = () => {
     }
   };
 
-  const hasPhoto = !!tweet?.photo;
-  const contentLength = tweet?.tweet.length ?? 0;
+  const toggleBookmark = async () => {
+    if (!tweet || !auth.currentUser) return;
+
+    const bookmarkRef = doc(
+      db,
+      "bookmarks",
+      `${auth.currentUser.uid}_${tweet.id}`
+    );
+    const bookmarkSnap = await getDoc(bookmarkRef);
+
+    if (bookmarkSnap.exists()) {
+      // 북마크 제거
+      await deleteDoc(bookmarkRef);
+      setIsBookmarked(false);
+    } else {
+      // 북마크 추가
+      await setDoc(bookmarkRef, {
+        userId: auth.currentUser.uid,
+        tweetId: tweet.id,
+      });
+      setIsBookmarked(true);
+    }
+  };
 
   return (
-    <Wrapper hasPhoto={hasPhoto} contentLength={contentLength}>
+    <Wrapper>
       {tweet ? (
         <>
           <Username>@{tweet.username}</Username>
           <Content>{tweet.tweet}</Content>
           {tweet.photo && <Photo src={tweet.photo} alt="Tweet image" />}
           <Footer>
+            <BookmarkButton onClick={toggleBookmark}>
+              <BookmarkIcon
+                isBookmarked={isBookmarked}
+                fill="none"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
+                />
+              </BookmarkIcon>
+            </BookmarkButton>
             <ShareButton onClick={handleShare}>
               <ShareIcon
                 fill="none"
