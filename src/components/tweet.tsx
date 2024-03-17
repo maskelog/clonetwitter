@@ -6,7 +6,15 @@ import {
   uploadBytes,
   deleteObject,
 } from "firebase/storage";
-import { deleteDoc, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+} from "firebase/firestore";
 import { auth, db, storage } from "../firebase";
 import { useNavigate } from "react-router-dom";
 
@@ -188,6 +196,7 @@ const Tweet: React.FC<ITweet> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editTweet, setEditTweet] = useState(tweet);
   const [bookmarked, setBookmarked] = useState(isBookmarked);
+  const [showQuoteRetweetModal, setShowQuoteRetweetModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -278,6 +287,40 @@ const Tweet: React.FC<ITweet> = ({
     }
   };
 
+  // 모달을 보여주는 함수
+  const handleShowQuoteRetweetModal = () => {
+    setShowQuoteRetweetModal(true);
+  };
+
+  // 모달을 숨기는 함수
+  const handleCloseQuoteRetweetModal = () => {
+    setShowQuoteRetweetModal(false);
+  };
+
+  // 인용 재게시를 처리하는 함수
+  const handleQuoteRetweet = async (quote: string) => {
+    try {
+      const userUid = auth.currentUser?.uid;
+      if (!userUid) {
+        console.error("User is not logged in");
+        return;
+      }
+
+      // 인용 재게시 정보를 'quotes' 컬렉션에 추가
+      await addDoc(collection(db, "quotes"), {
+        originalTweetId: id,
+        quoteText: quote,
+        userId: userUid,
+        createdAt: new Date(),
+      });
+
+      alert("Tweet has been quoted!");
+      handleCloseQuoteRetweetModal();
+    } catch (error) {
+      console.error("Failed to quote retweet:", error);
+    }
+  };
+
   return (
     <Wrapper onClick={handleTweetClick}>
       <Column>
@@ -334,6 +377,22 @@ const Tweet: React.FC<ITweet> = ({
         />
       )}
       <ButtonsContainer onClick={handleButtonClick}>
+        <ActionButton className="retweet" onClick={handleShowQuoteRetweetModal}>
+          <ActionIcon
+            fill="none"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3"
+            />
+          </ActionIcon>
+        </ActionButton>
         <ActionButton
           className="Bookmark"
           onClick={(event) => {
