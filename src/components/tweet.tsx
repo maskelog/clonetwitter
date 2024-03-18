@@ -17,6 +17,7 @@ import {
 } from "firebase/firestore";
 import { auth, db, storage } from "../firebase";
 import { useNavigate } from "react-router-dom";
+import QuoteRetweetModal from "./QuoteRetweetModal";
 
 const Wrapper = styled.div`
   display: flex;
@@ -162,6 +163,12 @@ const ActionIcon = styled.svg`
   margin-right: 5px;
 `;
 
+const RetweetIcon = styled.svg`
+  width: 24px;
+  height: 24px;
+  margin-right: 5px;
+`;
+
 const BookmarkIcon = styled(ActionIcon)<{ isBookmarked: boolean }>`
   ${(props) =>
     props.isBookmarked
@@ -171,6 +178,43 @@ const BookmarkIcon = styled(ActionIcon)<{ isBookmarked: boolean }>`
       : css`
           fill: none;
         `}
+`;
+
+const RetweetOptions = styled.div`
+  position: absolute;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  top: 100%;
+  right: 0;
+  z-index: 2;
+`;
+
+const RetweetOptionButton = styled.button`
+  background-color: #f0f0f0;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  margin: 4px 0;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #e2e2e2;
+  }
+
+  &:first-child {
+    margin-top: 0;
+  }
+
+  &:last-child {
+    margin-bottom: 0;
+  }
 `;
 
 export interface ITweet {
@@ -196,8 +240,11 @@ const Tweet: React.FC<ITweet> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editTweet, setEditTweet] = useState(tweet);
   const [bookmarked, setBookmarked] = useState(isBookmarked);
-  const [showQuoteRetweetModal, setShowQuoteRetweetModal] = useState(false);
+  const [isRetweetModalOpen, setIsRetweetModalOpen] = useState(false);
+  const [showRetweetOptions, setShowRetweetOptions] = useState(false);
+  const [retweetComment, setRetweetComment] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const checkBookmarkStatus = async () => {
@@ -211,6 +258,46 @@ const Tweet: React.FC<ITweet> = ({
 
     checkBookmarkStatus();
   }, [id]);
+
+  // 리트윗 옵션 토글
+  const toggleRetweetOptions = () => setShowRetweetOptions(!showRetweetOptions);
+
+  // 리트윗 실행
+  const handleRetweet = async (type: "retweet" | "quote", comment?: string) => {
+    // Ensure the user is logged in
+    const user = auth.currentUser;
+    if (!user) {
+      alert("You need to be logged in to retweet or quote retweet.");
+      setIsRetweetModalOpen(false); // Optionally close the modal if opened
+      return; // Exit the function if the user is not logged in
+    }
+
+    try {
+      if (type === "quote" && comment) {
+        // 인용 리트윗 로직
+        await addDoc(collection(db, "retweets"), {
+          userId: user.uid,
+          tweetId: id,
+          comment: comment, // 인용 리트윗의 경우 인용 내용 추가
+          createdAt: new Date(),
+        });
+        alert("Quote retweet posted successfully");
+      } else {
+        // 단순 리트윗 로직
+        await addDoc(collection(db, "retweets"), {
+          userId: user.uid,
+          tweetId: id,
+          createdAt: new Date(),
+        });
+        alert("Tweet retweeted successfully");
+      }
+    } catch (error) {
+      console.error("Failed to retweet: ", error);
+      alert("Failed to retweet. Please try again later.");
+    } finally {
+      setIsRetweetModalOpen(false); // Always close the modal after attempting to retweet
+    }
+  };
 
   const handleMenuToggle = () => setShowMenu(!showMenu);
   const handleDelete = async () => {
@@ -235,8 +322,6 @@ const Tweet: React.FC<ITweet> = ({
       await updateDoc(doc(db, "tweets", id), { photo: photoURL });
     }
   };
-
-  const navigate = useNavigate();
 
   const handleUsernameClick = () => {
     // 사용자 ID로 프로필 페이지로 이동
@@ -287,37 +372,24 @@ const Tweet: React.FC<ITweet> = ({
     }
   };
 
-  // 모달을 보여주는 함수
-  const handleShowQuoteRetweetModal = () => {
-    setShowQuoteRetweetModal(true);
-  };
-
-  // 모달을 숨기는 함수
-  const handleCloseQuoteRetweetModal = () => {
-    setShowQuoteRetweetModal(false);
-  };
-
-  // 인용 재게시를 처리하는 함수
-  const handleQuoteRetweet = async (quote: string) => {
-    try {
-      const userUid = auth.currentUser?.uid;
-      if (!userUid) {
-        console.error("User is not logged in");
-        return;
+  const handleQuoteRetweet = async () => {
+    // 사용자 로그인 확인
+    if (auth.currentUser) {
+      try {
+        await addDoc(collection(db, "tweets"), {
+          userId: auth.currentUser.uid,
+          tweet: retweetComment,
+          quotedTweetId: id,
+          timestamp: new Date(),
+        });
+        alert("Quote retweeted successfully");
+      } catch (error) {
+        console.error("Error quote retweeting: ", error);
       }
-
-      // 인용 재게시 정보를 'quotes' 컬렉션에 추가
-      await addDoc(collection(db, "quotes"), {
-        originalTweetId: id,
-        quoteText: quote,
-        userId: userUid,
-        createdAt: new Date(),
-      });
-
-      alert("Tweet has been quoted!");
-      handleCloseQuoteRetweetModal();
-    } catch (error) {
-      console.error("Failed to quote retweet:", error);
+      setRetweetComment("");
+      setIsRetweetModalOpen(false);
+    } else {
+      alert("Please log in to quote retweet.");
     }
   };
 
@@ -377,8 +449,8 @@ const Tweet: React.FC<ITweet> = ({
         />
       )}
       <ButtonsContainer onClick={handleButtonClick}>
-        <ActionButton className="retweet" onClick={handleShowQuoteRetweetModal}>
-          <ActionIcon
+        <ActionButton className="retweet" onClick={toggleRetweetOptions}>
+          <RetweetIcon
             fill="none"
             strokeWidth={1.5}
             stroke="currentColor"
@@ -391,8 +463,26 @@ const Tweet: React.FC<ITweet> = ({
               strokeLinejoin="round"
               d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3"
             />
-          </ActionIcon>
+          </RetweetIcon>
         </ActionButton>
+        {showRetweetOptions && (
+          <RetweetOptions>
+            <RetweetOptionButton onClick={() => handleRetweet("retweet")}>
+              재게시
+            </RetweetOptionButton>
+            <RetweetOptionButton onClick={() => handleRetweet("quote")}>
+              인용
+            </RetweetOptionButton>
+          </RetweetOptions>
+        )}
+
+        {isRetweetModalOpen && (
+          <QuoteRetweetModal
+            isOpen={isRetweetModalOpen}
+            onClose={() => setIsRetweetModalOpen(false)}
+            onSubmit={handleQuoteRetweet}
+          />
+        )}
         <ActionButton
           className="Bookmark"
           onClick={(event) => {
