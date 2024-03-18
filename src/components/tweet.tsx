@@ -18,6 +18,7 @@ import {
 import { auth, db, storage } from "../firebase";
 import { useNavigate } from "react-router-dom";
 import QuoteRetweetModal from "./QuoteRetweetModal";
+import firebase from "firebase/compat/app";
 
 const Wrapper = styled.div`
   display: flex;
@@ -217,15 +218,22 @@ const RetweetOptionButton = styled.button`
   }
 `;
 
+const QuotedTweet = styled.div`
+  border-left: 2px solid #ccc;
+  padding-left: 10px;
+  margin-top: 10px;
+`;
+
 export interface ITweet {
   id: string;
-  photo: string;
   tweet: string;
   userId: string;
   username: string;
-  createdAt: number;
-  isBookmarked: boolean;
-  onBookmarkToggle: () => void;
+  createdAt: firebase.firestore.Timestamp;
+  photo?: string;
+  isBookmarked?: boolean;
+  quotedTweetId?: string;
+  quotedTweet?: ITweet;
 }
 
 const Tweet: React.FC<ITweet> = ({
@@ -235,6 +243,7 @@ const Tweet: React.FC<ITweet> = ({
   tweet,
   photo,
   isBookmarked,
+  quotedTweet,
 }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -263,39 +272,27 @@ const Tweet: React.FC<ITweet> = ({
   const toggleRetweetOptions = () => setShowRetweetOptions(!showRetweetOptions);
 
   // 리트윗 실행
-  const handleRetweet = async (type: "retweet" | "quote", comment?: string) => {
-    // Ensure the user is logged in
+  const handleRetweet = async (type: "retweet" | "quote") => {
     const user = auth.currentUser;
     if (!user) {
       alert("You need to be logged in to retweet or quote retweet.");
-      setIsRetweetModalOpen(false); // Optionally close the modal if opened
-      return; // Exit the function if the user is not logged in
+      return;
     }
 
-    try {
-      if (type === "quote" && comment) {
-        // 인용 리트윗 로직
-        await addDoc(collection(db, "retweets"), {
-          userId: user.uid,
-          tweetId: id,
-          comment: comment, // 인용 리트윗의 경우 인용 내용 추가
-          createdAt: new Date(),
-        });
-        alert("Quote retweet posted successfully");
-      } else {
-        // 단순 리트윗 로직
+    if (type === "quote") {
+      setIsRetweetModalOpen(true);
+    } else {
+      try {
         await addDoc(collection(db, "retweets"), {
           userId: user.uid,
           tweetId: id,
           createdAt: new Date(),
         });
         alert("Tweet retweeted successfully");
+      } catch (error) {
+        console.error("Failed to retweet: ", error);
+        alert("Failed to retweet. Please try again later.");
       }
-    } catch (error) {
-      console.error("Failed to retweet: ", error);
-      alert("Failed to retweet. Please try again later.");
-    } finally {
-      setIsRetweetModalOpen(false); // Always close the modal after attempting to retweet
     }
   };
 
@@ -372,24 +369,27 @@ const Tweet: React.FC<ITweet> = ({
     }
   };
 
-  const handleQuoteRetweet = async () => {
-    // 사용자 로그인 확인
-    if (auth.currentUser) {
-      try {
-        await addDoc(collection(db, "tweets"), {
-          userId: auth.currentUser.uid,
-          tweet: retweetComment,
-          quotedTweetId: id,
-          timestamp: new Date(),
-        });
-        alert("Quote retweeted successfully");
-      } catch (error) {
-        console.error("Error quote retweeting: ", error);
-      }
-      setRetweetComment("");
-      setIsRetweetModalOpen(false);
-    } else {
+  const handleQuoteRetweet = async (quote: string) => {
+    const user = auth.currentUser;
+    if (!user) {
       alert("Please log in to quote retweet.");
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, "tweets"), {
+        userId: user.uid,
+        tweet: quote,
+        quotedTweetId: id,
+        timestamp: new Date(),
+      });
+      alert("Quote retweeted successfully");
+    } catch (error) {
+      console.error("Error quote retweeting: ", error);
+      alert("Failed to quote retweet. Please try again.");
+    } finally {
+      setIsRetweetModalOpen(false);
+      setRetweetComment("");
     }
   };
 
@@ -448,6 +448,12 @@ const Tweet: React.FC<ITweet> = ({
           onClick={() => window.open(photo, "_blank")}
         />
       )}
+      {quotedTweet && (
+        <QuotedTweet>
+          <strong>인용된 트트윗:</strong>
+          <p>{quotedTweet.tweet}</p>
+        </QuotedTweet>
+      )}
       <ButtonsContainer onClick={handleButtonClick}>
         <ActionButton className="retweet" onClick={toggleRetweetOptions}>
           <RetweetIcon
@@ -480,9 +486,10 @@ const Tweet: React.FC<ITweet> = ({
           <QuoteRetweetModal
             isOpen={isRetweetModalOpen}
             onClose={() => setIsRetweetModalOpen(false)}
-            onSubmit={handleQuoteRetweet}
+            onSubmit={handleQuoteRetweet} // Use the handleQuoteRetweet function for submission
           />
         )}
+
         <ActionButton
           className="Bookmark"
           onClick={(event) => {
