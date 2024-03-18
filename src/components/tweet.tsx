@@ -280,15 +280,17 @@ const Tweet: React.FC<ITweet> = ({
     }
 
     if (type === "quote") {
+      // 인용 리트윗 모달 열기
       setIsRetweetModalOpen(true);
     } else {
+      // 단순 리트윗 로직 실행
       try {
         await addDoc(collection(db, "retweets"), {
           userId: user.uid,
           tweetId: id,
-          createdAt: new Date(),
+          createdAt: new Date().toISOString(),
         });
-        alert("Tweet retweeted successfully");
+        alert("Retweet successful!");
       } catch (error) {
         console.error("Failed to retweet: ", error);
         alert("Failed to retweet. Please try again later.");
@@ -381,7 +383,7 @@ const Tweet: React.FC<ITweet> = ({
         userId: user.uid,
         tweet: quote,
         quotedTweetId: id,
-        timestamp: new Date(),
+        createdAt: new Date().toISOString(),
       });
       alert("Quote retweeted successfully");
     } catch (error) {
@@ -486,7 +488,7 @@ const Tweet: React.FC<ITweet> = ({
           <QuoteRetweetModal
             isOpen={isRetweetModalOpen}
             onClose={() => setIsRetweetModalOpen(false)}
-            onSubmit={handleQuoteRetweet} // Use the handleQuoteRetweet function for submission
+            onSubmit={handleQuoteRetweet}
           />
         )}
 

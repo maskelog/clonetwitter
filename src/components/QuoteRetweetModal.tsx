@@ -3,18 +3,20 @@ import Modal from "react-modal";
 import styled from "styled-components";
 
 const StyledModal = styled(Modal)`
+  position: absolute;
   top: 50%;
   left: 50%;
   right: auto;
   bottom: auto;
-  margin-right: "-50%";
-  transform: "translate(-50%, -50%)";
-  max-width: "600px";
-  width: "90%";
+  margin-right: -50%;
+  transform: translate(-50%, -50%);
+  max-width: 600px;
+  width: 90%;
   background: #fff;
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  outline: none;
 `;
 
 const StyledTextArea = styled.textarea`
@@ -25,6 +27,7 @@ const StyledTextArea = styled.textarea`
   border-radius: 4px;
   border: 1px solid #ccc;
   font-size: 16px;
+  resize: none;
 `;
 
 const StyledButton = styled.button`
@@ -36,15 +39,20 @@ const StyledButton = styled.button`
   border-radius: 4px;
   cursor: pointer;
   font-size: 16px;
+
   &:first-child {
     margin-right: 10px;
   }
+
   &:hover {
     opacity: 0.9;
   }
+
+  &.cancel {
+    background-color: #6c757d;
+  }
 `;
 
-// Assuming your root element ID is correct. Adjust if necessary.
 Modal.setAppElement("#root");
 
 interface Props {
@@ -59,7 +67,7 @@ const QuoteRetweetModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) => {
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     onSubmit(quote);
-    onClose(); // Closing modal after submission
+    onClose();
   };
 
   return (
@@ -78,11 +86,7 @@ const QuoteRetweetModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) => {
         />
         <div>
           <StyledButton type="submit">Quote Retweet</StyledButton>
-          <StyledButton
-            type="button"
-            onClick={onClose}
-            style={{ backgroundColor: "#6c757d" }}
-          >
+          <StyledButton type="button" onClick={onClose} className="cancel">
             Cancel
           </StyledButton>
         </div>
