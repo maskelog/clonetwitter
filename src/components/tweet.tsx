@@ -452,7 +452,7 @@ const Tweet: React.FC<ITweet> = ({
       )}
       {quotedTweet && (
         <QuotedTweet>
-          <strong>인용된 트트윗:</strong>
+          <strong>인용된 트윗:</strong>
           <p>{quotedTweet.tweet}</p>
         </QuotedTweet>
       )}
