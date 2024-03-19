@@ -23,20 +23,18 @@ export default function Timeline() {
 
   useEffect(() => {
     const fetchTweetsAndRetweets = async () => {
-      // 원본 및 인용 트윗 가져오기
-      let allTweets: ITweet[] = [];
+      // Fetch original and quoted tweets
       const tweetsSnapshot = await getDocs(
         query(collection(db, "tweets"), orderBy("createdAt", "desc"), limit(50))
       );
+      let allTweets: ITweet[] = [];
 
       for (const docSnapshot of tweetsSnapshot.docs) {
-        let tweetData: ITweet = {
-          ...(docSnapshot.data() as ITweet),
-          id: docSnapshot.id,
-          isRetweet: false,
-        };
+        let tweetData = docSnapshot.data() as ITweet;
+        tweetData.id = docSnapshot.id;
+        tweetData.isRetweet = false;
 
-        // 인용된 트윗 정보 불러오기
+        // Fetch quoted tweet information if available
         if (tweetData.quotedTweetId) {
           const quotedTweetSnap = await getDoc(
             doc(db, "tweets", tweetData.quotedTweetId)
@@ -44,7 +42,7 @@ export default function Timeline() {
           if (quotedTweetSnap.exists()) {
             tweetData.quotedTweet = {
               id: quotedTweetSnap.id,
-              ...(quotedTweetSnap.data() as ITweet),
+              ...(quotedTweetSnap.data() as Omit<ITweet, "id">),
             };
           }
         }
@@ -52,33 +50,30 @@ export default function Timeline() {
         allTweets.push(tweetData);
       }
 
-      // 리트윗 정보 가져오기
+      // Fetch retweets
       const retweetsSnapshot = await getDocs(
         query(collection(db, "retweets"), orderBy("createdAt", "desc"))
       );
       for (const retweetDoc of retweetsSnapshot.docs) {
         const retweetData = retweetDoc.data();
-        const originalTweetSnap = await getDoc(
+        const originalTweetDoc = await getDoc(
           doc(db, "tweets", retweetData.tweetId)
         );
 
-        if (originalTweetSnap.exists()) {
-          let originalTweetData: ITweet = {
-            ...(originalTweetSnap.data() as ITweet),
-            id: originalTweetSnap.id,
+        if (originalTweetDoc.exists()) {
+          let originalTweetData = {
+            ...(originalTweetDoc.data() as Omit<ITweet, "id">),
+            id: originalTweetDoc.id,
             isRetweet: true,
-            retweetUsername: retweetData.username,
+            retweetUsername: retweetData.retweetUsername,
           };
+
           allTweets.push(originalTweetData);
         }
       }
 
-      // 시간 순으로 정렬
-      allTweets.sort(
-        (a, b) =>
-          (b.createdAt.seconds ?? b.createdAt) -
-          (a.createdAt.seconds ?? a.createdAt)
-      );
+      allTweets.sort((a, b) => b.createdAt - a.createdAt);
+
       setTweets(allTweets);
     };
 
@@ -88,7 +83,11 @@ export default function Timeline() {
   return (
     <Wrapper>
       {tweets.map((tweet) => (
-        <Tweet key={tweet.id} {...tweet} />
+        <Tweet
+          key={tweet.id}
+          {...tweet}
+          retweetUsername={tweet.retweetUsername}
+        />
       ))}
     </Wrapper>
   );

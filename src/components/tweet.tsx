@@ -229,7 +229,7 @@ export interface ITweet {
   tweet: string;
   userId: string;
   username: string;
-  createdAt: firebase.firestore.Timestamp | number;
+  createdAt: number;
   photo?: string;
   isBookmarked?: boolean;
   quotedTweetId?: string;
@@ -460,11 +460,11 @@ const Tweet: React.FC<ITweet> = ({
       {quotedTweet && (
         <QuotedTweet>
           <p>
-            @{quotedTweet.username}: {quotedTweet.tweet}
+            @ {quotedTweet.username}: {quotedTweet.tweet}
           </p>
         </QuotedTweet>
       )}
-      {isRetweet && <div>재게시됨 @{retweetUsername || "알 수 없음"}</div>}
+      {isRetweet && <div>재게시됨 @ {retweetUsername || "알 수 없음"}</div>}
       <ButtonsContainer onClick={handleButtonClick}>
         <ActionButton className="retweet" onClick={toggleRetweetOptions}>
           <RetweetIcon
