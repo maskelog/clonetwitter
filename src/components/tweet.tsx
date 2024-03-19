@@ -229,11 +229,13 @@ export interface ITweet {
   tweet: string;
   userId: string;
   username: string;
-  createdAt: firebase.firestore.Timestamp;
+  createdAt: firebase.firestore.Timestamp | number;
   photo?: string;
   isBookmarked?: boolean;
   quotedTweetId?: string;
-  quotedTweet?: ITweet;
+  quotedTweet?: ITweet | null;
+  isRetweet?: boolean;
+  retweetUsername?: string;
 }
 
 const Tweet: React.FC<ITweet> = ({
@@ -244,6 +246,8 @@ const Tweet: React.FC<ITweet> = ({
   photo,
   isBookmarked,
   quotedTweet,
+  isRetweet,
+  retweetUsername,
 }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -288,7 +292,9 @@ const Tweet: React.FC<ITweet> = ({
         await addDoc(collection(db, "retweets"), {
           userId: user.uid,
           tweetId: id,
-          createdAt: new Date().toISOString(),
+          createdAt: Date.now(),
+          // 현재 로그인한 사용자의 displayName을 retweetUsername 필드로 추가
+          retweetUsername: user.displayName || "Anonymous",
         });
         alert("Retweet successful!");
       } catch (error) {
@@ -383,6 +389,7 @@ const Tweet: React.FC<ITweet> = ({
         userId: user.uid,
         tweet: quote,
         quotedTweetId: id,
+        username: user.displayName || "Anonymous",
         createdAt: new Date().toISOString(),
       });
       alert("Quote retweeted successfully");
@@ -452,10 +459,12 @@ const Tweet: React.FC<ITweet> = ({
       )}
       {quotedTweet && (
         <QuotedTweet>
-          <strong>인용된 트윗:</strong>
-          <p>{quotedTweet.tweet}</p>
+          <p>
+            @{quotedTweet.username}: {quotedTweet.tweet}
+          </p>
         </QuotedTweet>
       )}
+      {isRetweet && <div>재게시됨 @{retweetUsername || "알 수 없음"}</div>}
       <ButtonsContainer onClick={handleButtonClick}>
         <ActionButton className="retweet" onClick={toggleRetweetOptions}>
           <RetweetIcon
