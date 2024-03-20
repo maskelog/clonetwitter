@@ -18,7 +18,6 @@ import {
 import { auth, db, storage } from "../firebase";
 import { useNavigate } from "react-router-dom";
 import QuoteRetweetModal from "./QuoteRetweetModal";
-import firebase from "firebase/compat/app";
 
 const Wrapper = styled.div`
   display: flex;
@@ -304,7 +303,11 @@ const Tweet: React.FC<ITweet> = ({
     }
   };
 
-  const handleMenuToggle = () => setShowMenu(!showMenu);
+  const handleMenuToggle = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation(); // 상위 요소로의 이벤트 전파 방지
+    setShowMenu((prevShowMenu) => !prevShowMenu); // 상태 토글
+  };
+
   const handleDelete = async () => {
     if (window.confirm("Are you sure you want to delete this tweet?")) {
       await deleteDoc(doc(db, "tweets", id));
@@ -328,8 +331,9 @@ const Tweet: React.FC<ITweet> = ({
     }
   };
 
-  const handleUsernameClick = () => {
+  const handleUsernameClick = (event: React.MouseEvent<HTMLSpanElement>) => {
     // 사용자 ID로 프로필 페이지로 이동
+    event.stopPropagation();
     navigate(`/profile/${userId}`);
   };
 
