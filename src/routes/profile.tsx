@@ -95,11 +95,13 @@ const Profile: React.FC = () => {
   const [tweets, setTweets] = useState<ITweet[]>([]);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
+  // 사용자 프로필 및 아바타 가져오기 및 설정
   useEffect(() => {
     const fetchUserProfileAndAvatar = async () => {
       if (userId) {
         const userRef = doc(db, "users", userId);
         const userSnap = await getDoc(userRef);
+
         if (userSnap.exists()) {
           const userData = userSnap.data() as UserProfile;
           setNewUsername(userData.displayName || "");
@@ -115,11 +117,25 @@ const Profile: React.FC = () => {
           }
         } else {
           console.error("No such document!");
-          navigate("/");
+          // GitHub 로그인 사용자의 데이터가 Firestore에 없을 때 데이터 생성
+          if (
+            currentUser &&
+            currentUser.providerData.some(
+              (provider) => provider.providerId === "github.com"
+            )
+          ) {
+            const newUserProfile = {
+              uid: currentUser.uid,
+              displayName: currentUser.displayName || "GitHub User",
+              photoURL: currentUser.photoURL || defaultAvatar,
+            };
+            await setDoc(userRef, newUserProfile); // Firestore에 사용자 데이터 생성
+            setAvatar(newUserProfile.photoURL);
+            setNewUsername(newUserProfile.displayName);
+          } else {
+            navigate("/"); // 사용자 데이터가 없고 GitHub 로그인도 아닌 경우 홈으로 리다이렉트
+          }
         }
-      } else if (currentUser) {
-        setAvatar(currentUser.photoURL || defaultAvatar);
-        setNewUsername(currentUser.displayName || "");
       }
     };
 
