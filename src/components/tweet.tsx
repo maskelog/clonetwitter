@@ -397,7 +397,7 @@ const Tweet: React.FC<ITweet> = ({
         tweet: quote,
         quotedTweetId: id,
         username: user.displayName || "Anonymous",
-        createdAt: new Date().toISOString(),
+        createdAt: Date.now(),
       });
       alert("Quote retweeted successfully");
     } catch (error) {
