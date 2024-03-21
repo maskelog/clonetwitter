@@ -169,7 +169,7 @@ const RetweetIcon = styled.svg`
   margin-right: 5px;
 `;
 
-const BookmarkIcon = styled(ActionIcon)<{ isBookmarked: boolean }>`
+const BookmarkIcon = styled(ActionIcon)<BookmarkIconProps>`
   ${(props) =>
     props.isBookmarked
       ? css`
@@ -237,6 +237,10 @@ export interface ITweet {
   retweetUsername?: string;
 }
 
+interface BookmarkIconProps {
+  isBookmarked: boolean;
+}
+
 const Tweet: React.FC<ITweet> = ({
   id,
   userId,
@@ -254,7 +258,6 @@ const Tweet: React.FC<ITweet> = ({
   const [bookmarked, setBookmarked] = useState(isBookmarked);
   const [isRetweetModalOpen, setIsRetweetModalOpen] = useState(false);
   const [showRetweetOptions, setShowRetweetOptions] = useState(false);
-  const [retweetComment, setRetweetComment] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
@@ -402,7 +405,6 @@ const Tweet: React.FC<ITweet> = ({
       alert("Failed to quote retweet. Please try again.");
     } finally {
       setIsRetweetModalOpen(false);
-      setRetweetComment("");
     }
   };
 
@@ -513,7 +515,7 @@ const Tweet: React.FC<ITweet> = ({
           }}
         >
           <BookmarkIcon
-            isBookmarked={bookmarked}
+            isBookmarked={bookmarked ?? false}
             fill="none"
             strokeWidth={1.5}
             stroke="currentColor"
