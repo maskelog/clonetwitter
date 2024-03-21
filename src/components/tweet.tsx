@@ -463,12 +463,12 @@ const Tweet: React.FC<ITweet> = ({
       )}
       {quotedTweet && (
         <QuotedTweet>
-          <p>
-            @ {quotedTweet.username}: {quotedTweet.tweet}
-          </p>
+          <Tweet {...quotedTweet} />
         </QuotedTweet>
       )}
-      {isRetweet && <div>재게시됨 @ {retweetUsername || "알 수 없음"}</div>}
+      {isRetweet && (
+        <QuotedTweet>재게시됨 @ {retweetUsername || "알 수 없음"}</QuotedTweet>
+      )}
       <ButtonsContainer onClick={handleButtonClick}>
         <ActionButton className="retweet" onClick={toggleRetweetOptions}>
           <RetweetIcon

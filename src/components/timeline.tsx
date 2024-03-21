@@ -23,50 +23,58 @@ export default function Timeline() {
 
   useEffect(() => {
     const fetchTweetsAndRetweets = async () => {
-      // Fetch original and quoted tweets
+      let allTweets: ITweet[] = [];
+
       const tweetsSnapshot = await getDocs(
         query(collection(db, "tweets"), orderBy("createdAt", "desc"), limit(50))
       );
-      let allTweets: ITweet[] = [];
 
-      for (const docSnapshot of tweetsSnapshot.docs) {
-        let tweetData = docSnapshot.data() as ITweet;
-        tweetData.id = docSnapshot.id;
-        tweetData.isRetweet = false;
+      const quotedTweetsPromises = tweetsSnapshot.docs.map(
+        async (docSnapshot) => {
+          const tweetData = {
+            ...docSnapshot.data(),
+            id: docSnapshot.id,
+          } as ITweet;
 
-        // Fetch quoted tweet information if available
-        if (tweetData.quotedTweetId) {
-          const quotedTweetSnap = await getDoc(
-            doc(db, "tweets", tweetData.quotedTweetId)
-          );
-          if (quotedTweetSnap.exists()) {
-            tweetData.quotedTweet = {
-              id: quotedTweetSnap.id,
-              ...(quotedTweetSnap.data() as Omit<ITweet, "id">),
-            };
+          if (tweetData.quotedTweetId) {
+            const quotedTweetDoc = await getDoc(
+              doc(db, "tweets", tweetData.quotedTweetId)
+            );
+
+            if (quotedTweetDoc.exists()) {
+              const quotedTweetData = {
+                ...quotedTweetDoc.data(),
+                id: quotedTweetDoc.id,
+              } as ITweet;
+              tweetData.quotedTweet = quotedTweetData;
+            }
           }
+
+          return tweetData;
         }
+      );
 
-        allTweets.push(tweetData);
-      }
+      const originalTweets = await Promise.all(quotedTweetsPromises);
+      allTweets.push(...originalTweets);
 
-      // Fetch retweets
       const retweetsSnapshot = await getDocs(
         query(collection(db, "retweets"), orderBy("createdAt", "desc"))
       );
-      for (const retweetDoc of retweetsSnapshot.docs) {
-        const retweetData = retweetDoc.data();
+
+      for (const docSnapshot of retweetsSnapshot.docs) {
+        const retweetData = docSnapshot.data();
         const originalTweetDoc = await getDoc(
           doc(db, "tweets", retweetData.tweetId)
         );
 
         if (originalTweetDoc.exists()) {
-          let originalTweetData = {
-            ...(originalTweetDoc.data() as Omit<ITweet, "id">),
+          const originalTweetData = {
+            ...originalTweetDoc.data(),
             id: originalTweetDoc.id,
+            createdAt: retweetData.createdAt,
             isRetweet: true,
             retweetUsername: retweetData.retweetUsername,
-          };
+          } as ITweet;
 
           allTweets.push(originalTweetData);
         }
@@ -83,11 +91,7 @@ export default function Timeline() {
   return (
     <Wrapper>
       {tweets.map((tweet) => (
-        <Tweet
-          key={tweet.id}
-          {...tweet}
-          retweetUsername={tweet.retweetUsername}
-        />
+        <Tweet key={tweet.id} {...tweet} />
       ))}
     </Wrapper>
   );
