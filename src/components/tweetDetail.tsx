@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { deleteDoc, doc, getDoc, setDoc } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  setDoc,
+} from "firebase/firestore";
 import { auth, db } from "../firebase";
 import styled, { css } from "styled-components";
 import { ITweet } from "./tweet";
+import QuoteRetweetModal from "./QuoteRetweetModal";
 
 const Wrapper = styled.div`
   display: flex;
@@ -95,10 +103,69 @@ const BookmarkIcon = styled(ActionIcon)<{ isBookmarked: boolean }>`
         `}
 `;
 
+const RetweetButton = styled.button`
+  border: none;
+  background: none;
+  color: white;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  &:hover,
+  &:active {
+    opacity: 0.8;
+  }
+`;
+
+const RetweetIcon = styled.svg`
+  width: 24px;
+  height: 24px;
+  margin-right: 5px;
+`;
+
+const RetweetOptions = styled.div`
+  position: absolute;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  top: 100%;
+  right: 0;
+  z-index: 2;
+`;
+
+const RetweetOptionButton = styled.button`
+  background-color: #f0f0f0;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  margin: 4px 0;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #e2e2e2;
+  }
+
+  &:first-child {
+    margin-top: 0;
+  }
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+`;
+
 const TweetDetail: React.FC = () => {
   const { tweetId } = useParams<{ tweetId?: string }>();
   const [tweet, setTweet] = useState<ITweet | null>(null);
   const [isBookmarked, setIsBookmarked] = useState<boolean>(false);
+  const [showRetweetOptions, setShowRetweetOptions] = useState(false);
+  const [isRetweetModalOpen, setIsRetweetModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchTweetAndBookmarkStatus = async () => {
@@ -163,6 +230,54 @@ const TweetDetail: React.FC = () => {
     }
   };
 
+  const handleRetweet = async (type: "retweet" | "quote") => {
+    if (!tweet || !auth.currentUser) {
+      console.error("You must be logged in to retweet or quote retweet.");
+      return;
+    }
+
+    if (type === "quote") {
+      setIsRetweetModalOpen(true); // 인용 리트윗 모달 열기
+    } else {
+      // 단순 리트윗 로직 실행
+      try {
+        await addDoc(collection(db, "retweets"), {
+          userId: auth.currentUser.uid,
+          tweetId: tweet.id,
+          createdAt: Date.now(),
+          retweetUsername: auth.currentUser.displayName || "Anonymous",
+        });
+        alert("Retweet successful!");
+      } catch (err) {
+        console.error("Failed to retweet: ", err);
+        alert("Failed to retweet. Please try again later.");
+      }
+    }
+  };
+
+  const handleQuoteRetweet = async (quote: string) => {
+    // 인용 리트윗 로직 (인용 내용을 포함한 새 트윗 추가)
+    const user = auth.currentUser;
+    if (!tweet || !auth.currentUser) return;
+    try {
+      await addDoc(collection(db, "tweets"), {
+        userId: auth.currentUser.uid,
+        tweet: quote,
+        quotedTweetId: tweet.id,
+        createdAt: Date.now(),
+        username: user?.displayName || "Anonymous",
+      });
+      alert("Quote retweeted successfully!");
+    } catch (err) {
+      console.error("Failed to quote retweet: ", err);
+      alert("Failed to quote retweet. Please try again.");
+    } finally {
+      setIsRetweetModalOpen(false); // 모달 닫기
+    }
+  };
+
+  const toggleRetweetOptions = () => setShowRetweetOptions(!showRetweetOptions);
+
   return (
     <Wrapper>
       {tweet ? (
@@ -171,6 +286,32 @@ const TweetDetail: React.FC = () => {
           <Content>{tweet.tweet}</Content>
           {tweet.photo && <Photo src={tweet.photo} alt="Tweet image" />}
           <Footer>
+            <RetweetButton className="retweet" onClick={toggleRetweetOptions}>
+              <RetweetIcon
+                fill="none"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3"
+                />
+              </RetweetIcon>
+            </RetweetButton>
+            {showRetweetOptions && (
+              <RetweetOptions>
+                <RetweetOptionButton onClick={() => handleRetweet("retweet")}>
+                  재게시
+                </RetweetOptionButton>
+                <RetweetOptionButton onClick={() => handleRetweet("quote")}>
+                  인용
+                </RetweetOptionButton>
+              </RetweetOptions>
+            )}
             <BookmarkButton onClick={toggleBookmark}>
               <BookmarkIcon
                 isBookmarked={isBookmarked}
@@ -204,6 +345,14 @@ const TweetDetail: React.FC = () => {
                 />
               </ShareIcon>
             </ShareButton>
+
+            {isRetweetModalOpen && (
+              <QuoteRetweetModal
+                isOpen={isRetweetModalOpen}
+                onClose={() => setIsRetweetModalOpen(false)}
+                onSubmit={handleQuoteRetweet}
+              />
+            )}
           </Footer>
         </>
       ) : (
