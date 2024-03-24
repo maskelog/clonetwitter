@@ -28,6 +28,8 @@ const Menu = styled.div`
   padding: 10px;
   gap: 20px;
   box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  background-color: black;
   @media (min-width: 769px) {
     position: relative;
     bottom: unset;
@@ -37,7 +39,7 @@ const Menu = styled.div`
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
-    padding: 20px;
+    padding: 10px;
   }
 `;
 
