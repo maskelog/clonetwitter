@@ -5,42 +5,53 @@ import { useNotifications } from "./NotificationProvider";
 
 const Wrapper = styled.div`
   display: grid;
-  grid-template-columns: 1fr 4fr;
+  grid-template-areas: "menu content";
+  grid-template-columns: auto 1fr;
   height: 100%;
-  padding: 50px 0px;
+  padding: 50px;
   width: 100%;
   max-width: 860px;
-  margin: 0 10px 0 10px;
+  margin: 0 auto;
+  background-color: black;
+
+  @media (max-width: 1024px) {
+    grid-template-areas:
+      "menu"
+      "content";
+    grid-template-columns: 1fr;
+    padding: 20px;
+  }
 
   @media (max-width: 768px) {
-    grid-template-columns: unset;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "menu"
+      "content";
   }
 `;
 
 const Menu = styled.div`
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
+  grid-area: menu;
+  position: relative;
   display: flex;
-  flex-direction: row;
-  justify-content: space-around;
+  flex-direction: column;
+  justify-content: flex-start;
   align-items: center;
-  padding: 10px;
+  padding: 20px;
   gap: 20px;
-  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
   z-index: 10;
-  background-color: black;
-  @media (min-width: 769px) {
-    position: relative;
-    bottom: unset;
-    left: unset;
-    width: unset;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
+
+  @media (max-width: 1024px) {
+    flex-direction: row;
+    justify-content: space-around;
     align-items: center;
     padding: 10px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
+    background-color: black;
   }
 `;
 
