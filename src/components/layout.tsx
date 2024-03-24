@@ -10,6 +10,7 @@ const Wrapper = styled.div`
   padding: 50px 0px;
   width: 100%;
   max-width: 860px;
+  margin: 0 10px 0 10px;
 
   @media (max-width: 768px) {
     grid-template-columns: unset;
