@@ -23,6 +23,7 @@ const Wrapper = styled.div`
   background-color: #000;
   color: #fff;
   position: relative;
+  line-height: 120%;
 `;
 
 const Username = styled.h2`
