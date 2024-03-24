@@ -25,11 +25,12 @@ const Wrapper = styled.div`
   padding: 20px;
   border: 1px solid #333;
   border-radius: 20px;
-  margin-bottom: 20px;
+  margin-bottom: 5px;
   background-color: #000;
   color: #fff;
   position: relative;
   padding-bottom: 60px;
+  line-height: 120%;
 `;
 
 const TextArea = styled.textarea`
