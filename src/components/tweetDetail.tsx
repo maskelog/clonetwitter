@@ -6,7 +6,10 @@ import {
   deleteDoc,
   doc,
   getDoc,
+  getDocs,
+  query,
   setDoc,
+  where,
 } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import styled, { css } from "styled-components";
@@ -104,6 +107,31 @@ const BookmarkIcon = styled(ActionIcon)<{ isBookmarked: boolean }>`
         `}
 `;
 
+const LikeIcon = styled(ActionIcon)<LikeIconProps>`
+  ${(props) =>
+    props.isLiked
+      ? css`
+          fill: #f00b0b;
+        `
+      : css`
+          fill: none;
+        `}
+`;
+
+const LikedButton = styled.button`
+  border: none;
+  background: none;
+  color: white;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  &:hover,
+  &:active {
+    opacity: 0.8;
+  }
+`;
+
 const RetweetButton = styled.button`
   border: none;
   background: none;
@@ -161,12 +189,18 @@ const RetweetOptionButton = styled.button`
   }
 `;
 
+interface LikeIconProps {
+  isLiked: boolean;
+}
+
 const TweetDetail: React.FC = () => {
   const { tweetId } = useParams<{ tweetId?: string }>();
   const [tweet, setTweet] = useState<ITweet | null>(null);
   const [isBookmarked, setIsBookmarked] = useState<boolean>(false);
   const [showRetweetOptions, setShowRetweetOptions] = useState(false);
   const [isRetweetModalOpen, setIsRetweetModalOpen] = useState(false);
+  const [likeCount, setLikeCount] = useState<number>(0);
+  const [liked, setLiked] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchTweetAndBookmarkStatus = async () => {
@@ -279,6 +313,48 @@ const TweetDetail: React.FC = () => {
 
   const toggleRetweetOptions = () => setShowRetweetOptions(!showRetweetOptions);
 
+  //좋아요
+  useEffect(() => {
+    const fetchLikeStatus = async () => {
+      const userUid = auth.currentUser?.uid;
+      if (userUid && tweetId) {
+        // `tweetId`가 있는 경우에만 실행
+        // 현재 사용자가 좋아요를 눌렀는지 확인
+        const likeRef = doc(db, "likes", `${tweetId}_${userUid}`);
+        const likeSnap = await getDoc(likeRef);
+        setLiked(likeSnap.exists());
+
+        // 총 좋아요 수 확인
+        const likeCountRef = collection(db, "likes");
+        const q = query(likeCountRef, where("tweetId", "==", tweetId));
+        const querySnapshot = await getDocs(q);
+        setLikeCount(querySnapshot.docs.length);
+      }
+    };
+
+    fetchLikeStatus();
+  }, [tweetId]); // 의존성 배열에 `tweetId` 추가
+
+  const handleLikeToggle = async () => {
+    const userUid = auth.currentUser?.uid;
+    if (!userUid || !tweetId) return; // `tweetId` 확인 추가
+
+    const likeRef = doc(db, "likes", `${tweetId}_${userUid}`);
+    const likeSnap = await getDoc(likeRef);
+
+    if (likeSnap.exists()) {
+      // 좋아요 제거
+      await deleteDoc(likeRef);
+      setLiked(false);
+      setLikeCount((prev) => prev - 1);
+    } else {
+      // 좋아요 추가
+      await setDoc(likeRef, { userId: userUid, tweetId: tweetId }); // 여기서도 `id` 대신 `tweetId` 사용
+      setLiked(true);
+      setLikeCount((prev) => prev + 1);
+    }
+  };
+
   return (
     <Wrapper>
       {tweet ? (
@@ -330,6 +406,32 @@ const TweetDetail: React.FC = () => {
                 />
               </BookmarkIcon>
             </BookmarkButton>
+            <LikedButton
+              onClick={(event) => {
+                event.stopPropagation();
+                handleLikeToggle();
+              }}
+            >
+              <LikeIcon
+                isLiked={liked}
+                fill={liked ? "#f0b90b" : "none"}
+                strokeWidth={1.5}
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"
+                />
+              </LikeIcon>
+              {likeCount > 0 && (
+                <span style={{ marginLeft: "2px" }}>{likeCount}</span>
+              )}
+            </LikedButton>
+
             <ShareButton onClick={handleShare}>
               <ShareIcon
                 fill="none"
