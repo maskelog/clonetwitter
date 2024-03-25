@@ -12,8 +12,11 @@ import {
   deleteDoc,
   doc,
   getDoc,
+  getDocs,
+  query,
   setDoc,
   updateDoc,
+  where,
 } from "firebase/firestore";
 import { auth, db, storage } from "../firebase";
 import { useNavigate } from "react-router-dom";
@@ -170,6 +173,17 @@ const RetweetIcon = styled.svg`
   margin-right: 5px;
 `;
 
+const LikeIcon = styled(ActionIcon)<LikeIconProps>`
+  ${(props) =>
+    props.isLiked
+      ? css`
+          fill: #f00b0b;
+        `
+      : css`
+          fill: none;
+        `}
+`;
+
 const BookmarkIcon = styled(ActionIcon)<BookmarkIconProps>`
   ${(props) =>
     props.isBookmarked
@@ -242,6 +256,9 @@ interface BookmarkIconProps {
   isBookmarked: boolean;
 }
 
+interface LikeIconProps {
+  isLiked: boolean;
+}
 const Tweet: React.FC<ITweet> = ({
   id,
   userId,
@@ -257,6 +274,8 @@ const Tweet: React.FC<ITweet> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editTweet, setEditTweet] = useState(tweet);
   const [bookmarked, setBookmarked] = useState(isBookmarked);
+  const [liked, setLiked] = useState<boolean>(false);
+  const [likeCount, setLikeCount] = useState<number>(0);
   const [isRetweetModalOpen, setIsRetweetModalOpen] = useState(false);
   const [showRetweetOptions, setShowRetweetOptions] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -409,6 +428,46 @@ const Tweet: React.FC<ITweet> = ({
     }
   };
 
+  //좋아요
+  useEffect(() => {
+    const fetchLikeStatus = async () => {
+      const userUid = auth.currentUser?.uid;
+      if (userUid) {
+        // 현재 사용자가 좋아요를 눌렀는지 확인
+        const likeRef = doc(db, "likes", `${id}_${userUid}`);
+        const likeSnap = await getDoc(likeRef);
+        setLiked(likeSnap.exists());
+      }
+      // 총 좋아요 수 확인
+      const likeCountRef = collection(db, "likes");
+      const q = query(likeCountRef, where("tweetId", "==", id));
+      const querySnapshot = await getDocs(q);
+      setLikeCount(querySnapshot.docs.length);
+    };
+
+    fetchLikeStatus();
+  }, [id]);
+
+  const handleLikeToggle = async () => {
+    const userUid = auth.currentUser?.uid;
+    if (!userUid) return;
+
+    const likeRef = doc(db, "likes", `${id}_${userUid}`);
+    const likeSnap = await getDoc(likeRef);
+
+    if (likeSnap.exists()) {
+      // 좋아요 제거
+      await deleteDoc(likeRef);
+      setLiked(false);
+      setLikeCount((prev) => prev - 1);
+    } else {
+      // 좋아요 추가
+      await setDoc(likeRef, { userId: userUid, tweetId: id });
+      setLiked(true);
+      setLikeCount((prev) => prev + 1);
+    }
+  };
+
   return (
     <Wrapper onClick={handleTweetClick}>
       <Column>
@@ -530,6 +589,29 @@ const Tweet: React.FC<ITweet> = ({
               d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
             />
           </BookmarkIcon>
+        </ActionButton>
+
+        <ActionButton
+          className="Liked"
+          onClick={(event) => {
+            event.stopPropagation();
+            handleLikeToggle();
+          }}
+        >
+          <LikeIcon
+            isLiked={liked ?? false}
+            strokeWidth={1.5}
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"
+            />
+          </LikeIcon>
         </ActionButton>
         <ActionButton className="share" onClick={handleShare}>
           <ActionIcon
