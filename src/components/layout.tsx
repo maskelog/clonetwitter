@@ -65,7 +65,7 @@ const NotificationDot = styled.span`
   border-radius: 50%;
 `;
 
-const MenuItem = styled.div`
+const MenuItem = styled.div<MenuItemProps>`
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -75,10 +75,12 @@ const MenuItem = styled.div`
   width: 50px;
   border-radius: 50%;
   position: relative;
+
   svg {
     width: 30px;
-    fill: white;
+    fill: ${(props) => (props.isBookmarked ? "#f0b90b" : "white")};
   }
+
   &.log-out {
     border-color: tomato;
     svg {
@@ -87,9 +89,13 @@ const MenuItem = styled.div`
   }
 `;
 
+interface MenuItemProps {
+  isBookmarked?: boolean;
+}
+
 const Layout: React.FC = () => {
   const navigate = useNavigate();
-  const { hasNotification } = useNotifications();
+  const { hasNotification, hasBookmark } = useNotifications();
 
   const onLogOut = async () => {
     const ok = window.confirm("Are you sure you want to log out?");
@@ -149,7 +155,7 @@ const Layout: React.FC = () => {
           </MenuItem>
         </Link>
         <Link to="/BookmarkPage">
-          <MenuItem>
+          <MenuItem isBookmarked={hasBookmark}>
             {hasNotification && <NotificationDot />}
             <svg
               fill="none"

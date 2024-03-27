@@ -19,10 +19,12 @@ import {
 
 interface NotificationContextType {
   hasNotification: boolean;
+  hasBookmark: boolean;
 }
 
 const NotificationContext = createContext<NotificationContextType>({
   hasNotification: false,
+  hasBookmark: false,
 });
 
 interface Props {
@@ -41,11 +43,13 @@ export const useNotifications = (): NotificationContextType => {
 
 export const NotificationProvider: React.FC<Props> = ({ children }) => {
   const [hasNotification, setHasNotification] = useState<boolean>(false);
+  const [hasBookmark, setHasBookmark] = useState<boolean>(false);
 
   useEffect(() => {
     const currentUserUid = auth.currentUser?.uid;
     if (!currentUserUid) {
       setHasNotification(false);
+      setHasBookmark(false);
       return;
     }
 
@@ -93,6 +97,14 @@ export const NotificationProvider: React.FC<Props> = ({ children }) => {
           }
         );
       }
+      const bookmarksRef = query(
+        collection(db, "bookmarks"),
+        where("userId", "==", currentUserUid)
+      );
+      const bookmarksSub = onSnapshot(bookmarksRef, (snapshot) => {
+        setHasBookmark(snapshot.docs.length > 0);
+      });
+      unsubscribes.push(bookmarksSub);
     });
 
     unsubscribes.push(chatRoomsSub);
@@ -103,7 +115,7 @@ export const NotificationProvider: React.FC<Props> = ({ children }) => {
   }, []);
 
   return (
-    <NotificationContext.Provider value={{ hasNotification }}>
+    <NotificationContext.Provider value={{ hasNotification, hasBookmark }}>
       {children}
     </NotificationContext.Provider>
   );
