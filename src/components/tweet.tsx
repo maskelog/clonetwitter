@@ -472,7 +472,7 @@ const Tweet: React.FC<ITweet> = ({
   return (
     <Wrapper onClick={handleTweetClick}>
       <Column>
-        <Username onClick={handleUsernameClick}>{username}</Username>
+        <Username onClick={handleUsernameClick}>@{username}</Username>
         {auth.currentUser?.uid === userId && (
           <>
             <Button className="menu" onClick={handleMenuToggle}>
