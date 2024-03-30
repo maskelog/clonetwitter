@@ -156,7 +156,6 @@ const Layout: React.FC = () => {
         </Link>
         <Link to="/BookmarkPage">
           <MenuItem isBookmarked={hasBookmark}>
-            {hasNotification && <NotificationDot />}
             <svg
               fill="none"
               strokeWidth={1.5}

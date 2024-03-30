@@ -13,8 +13,6 @@ import {
   onSnapshot,
   orderBy,
   limit,
-  QueryDocumentSnapshot,
-  DocumentData,
 } from "firebase/firestore";
 
 interface NotificationContextType {
@@ -49,7 +47,6 @@ export const NotificationProvider: React.FC<Props> = ({ children }) => {
     const currentUserUid = auth.currentUser?.uid;
     if (!currentUserUid) {
       setHasNotification(false);
-      setHasBookmark(false);
       return;
     }
 
@@ -67,50 +64,61 @@ export const NotificationProvider: React.FC<Props> = ({ children }) => {
       if (totalRooms === 0) {
         setHasNotification(false);
       } else {
-        chatRoomsSnapshot.docs.forEach(
-          (doc: QueryDocumentSnapshot<DocumentData>) => {
-            const chatRoomId = doc.id;
-            const messagesRef = query(
-              collection(db, "messages"),
-              where("chatId", "==", chatRoomId),
-              orderBy("createdAt", "desc"),
-              limit(1)
+        chatRoomsSnapshot.docs.forEach((doc) => {
+          const chatRoomId = doc.id;
+          const messagesRef = query(
+            collection(db, "messages"),
+            where("chatId", "==", chatRoomId),
+            orderBy("createdAt", "desc"),
+            limit(1)
+          );
+
+          const messagesSub = onSnapshot(messagesRef, (messagesSnapshot) => {
+            const unread = messagesSnapshot.docs.some(
+              (doc) => !doc.data().read.includes(currentUserUid)
             );
 
-            const messagesSub = onSnapshot(messagesRef, (messagesSnapshot) => {
-              const unread = messagesSnapshot.docs.some(
-                (doc: QueryDocumentSnapshot<DocumentData>) =>
-                  !doc.data().read.includes(currentUserUid)
-              );
-
-              if (unread) {
-                setHasNotification(true);
-              } else {
-                checkedRooms += 1;
-                if (checkedRooms === totalRooms) {
-                  setHasNotification(false);
-                }
+            if (unread) {
+              setHasNotification(true);
+            } else {
+              checkedRooms += 1;
+              if (checkedRooms === totalRooms) {
+                setHasNotification(false);
               }
-            });
+            }
+          });
 
-            unsubscribes.push(messagesSub);
-          }
-        );
+          unsubscribes.push(messagesSub);
+        });
       }
-      const bookmarksRef = query(
-        collection(db, "bookmarks"),
-        where("userId", "==", currentUserUid)
-      );
-      const bookmarksSub = onSnapshot(bookmarksRef, (snapshot) => {
-        setHasBookmark(snapshot.docs.length > 0);
-      });
-      unsubscribes.push(bookmarksSub);
     });
 
     unsubscribes.push(chatRoomsSub);
 
     return () => {
       unsubscribes.forEach((unsubscribe) => unsubscribe());
+    };
+  }, []);
+
+  // 북마크 알림 로직을 별도의 useEffect 훅으로 분리
+  useEffect(() => {
+    const currentUserUid = auth.currentUser?.uid;
+    if (!currentUserUid) {
+      setHasBookmark(false);
+      return;
+    }
+
+    const bookmarksRef = query(
+      collection(db, "bookmarks"),
+      where("userId", "==", currentUserUid)
+    );
+
+    const bookmarksSub = onSnapshot(bookmarksRef, (snapshot) => {
+      setHasBookmark(snapshot.docs.length > 0);
+    });
+
+    return () => {
+      bookmarksSub();
     };
   }, []);
 
