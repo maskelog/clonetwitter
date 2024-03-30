@@ -148,16 +148,8 @@ export default function ChatPage() {
 
                 if (userSnap.exists()) {
                   const userProfile = userSnap.data();
-                  username = userProfile.name || "Unknown";
-
-                  try {
-                    avatarUrl = await getDownloadURL(
-                      ref(storage, `avatars/${otherUserId}`)
-                    );
-                  } catch (avatarError) {
-                    console.error("Error fetching avatar:", avatarError);
-                    avatarUrl = defaultAvatar;
-                  }
+                  username = userProfile.displayName || "Unknown";
+                  avatarUrl = userProfile.photoURL || defaultAvatar;
                 }
 
                 userInfos[otherUserId] = { username, avatarUrl };
