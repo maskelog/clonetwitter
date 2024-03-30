@@ -131,10 +131,14 @@ const ChatRoom: React.FC<{ userId: string }> = ({ userId }) => {
   const [isImageUploaded, setIsImageUploaded] = useState(false);
 
   const markMessageAsRead = async (messageId: string, userId: string) => {
-    const messageRef = doc(db, "messages", messageId);
-    await updateDoc(messageRef, {
-      read: arrayUnion(userId),
-    });
+    try {
+      const messageRef = doc(db, "messages", messageId);
+      await updateDoc(messageRef, {
+        read: arrayUnion(userId),
+      });
+    } catch (error) {
+      console.error("Error marking message as read:", error);
+    }
   };
 
   useEffect(() => {

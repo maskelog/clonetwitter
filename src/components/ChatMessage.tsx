@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { ref, getDownloadURL } from "firebase/storage";
 import { auth, db, storage } from "../firebase";
 import defaultAvatar from "../defaultavatar.svg";
-import { deleteDoc, doc } from "firebase/firestore";
+import { deleteDoc, doc, getDoc } from "firebase/firestore";
 
 const MessageContainer = styled.div<{ isSentByCurrentUser: boolean }>`
   display: flex;
@@ -108,7 +108,13 @@ interface ChatMessageProps {
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
-  const [avatarUrl, setAvatarUrl] = useState<string>(defaultAvatar);
+  const [userProfile, setUserProfile] = useState<{
+    displayName: string;
+    photoURL: string;
+  }>({
+    displayName: "Loading...",
+    photoURL: defaultAvatar,
+  });
   const currentUserUid = auth.currentUser?.uid;
   const isSentByCurrentUser = message.userId === currentUserUid;
 
@@ -119,13 +125,23 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       !message.read.includes(currentUserUid));
 
   useEffect(() => {
-    if (!message.isSentByCurrentUser && message.userId) {
-      const avatarRef = ref(storage, `avatars/${message.userId}`);
-      getDownloadURL(avatarRef)
-        .then(setAvatarUrl)
-        .catch(() => setAvatarUrl(defaultAvatar));
-    }
-  }, [message.userId, message.isSentByCurrentUser]);
+    const fetchUserProfile = async () => {
+      if (message.userId) {
+        const userRef = doc(db, "users", message.userId);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          setUserProfile({
+            displayName: userData.displayName || "Anonymous",
+            photoURL: userData.photoURL || defaultAvatar,
+          });
+        }
+      }
+    };
+
+    fetchUserProfile();
+  }, [message.userId]);
+
   const deleteMessage = async (messageId: string) => {
     const isConfirmed = window.confirm(
       "Are you sure you want to delete this message?"
@@ -139,13 +155,14 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       }
     }
   };
+
   return (
     <MessageContainer isSentByCurrentUser={isSentByCurrentUser}>
       <UserInfoContainer isSentByCurrentUser={isSentByCurrentUser}>
         <Avatar isSentByCurrentUser={isSentByCurrentUser}>
-          <img src={avatarUrl} alt="User avatar" />
+          <img src={userProfile.photoURL} alt="User avatar" />
         </Avatar>
-        <Username>{message.username}</Username>
+        <Username>{userProfile.displayName}</Username>
       </UserInfoContainer>
       <MessageContent isSentByCurrentUser={isSentByCurrentUser}>
         {message.imageUrl && (
