@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useParams, Link } from "react-router-dom";
-import { ref, getDownloadURL } from "firebase/storage";
-import { auth, db, storage } from "../firebase";
+import { auth, db } from "../firebase";
 import {
   collection,
   query,

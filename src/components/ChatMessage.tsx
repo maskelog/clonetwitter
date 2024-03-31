@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { ref, getDownloadURL } from "firebase/storage";
-import { auth, db, storage } from "../firebase";
+import { auth, db } from "../firebase";
 import defaultAvatar from "../defaultavatar.svg";
 import { deleteDoc, doc, getDoc } from "firebase/firestore";
 
