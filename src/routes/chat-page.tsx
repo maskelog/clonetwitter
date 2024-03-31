@@ -15,8 +15,23 @@ import {
 import defaultAvatar from "../defaultavatar.svg";
 import ChatRoom from "../components/ChatRoom";
 
+const size = {
+  mobileS: "320px",
+  mobileM: "480px",
+  tablet: "768px",
+  laptop: "1024px",
+};
+
+const media = {
+  mobileS: `(max-width: ${size.mobileS})`,
+  mobileM: `(max-width: ${size.mobileM})`,
+  tablet: `(max-width: ${size.tablet})`,
+  laptop: `(max-width: ${size.laptop})`,
+};
+
 const ChatPageLayout = styled.div`
-  display: flex;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
   height: 100vh;
 `;
 
@@ -25,7 +40,6 @@ const ChatRoomsList = styled.div`
   padding: 10px;
   overflow-y: auto;
   max-height: 80%;
-  border-right: 1px solid #ccc;
   font-size: 20px;
 `;
 
@@ -61,11 +75,17 @@ const RoomContent = styled.div`
   justify-content: space-between;
   align-items: center;
   width: 100%;
+
+  @media ${media.mobileM} {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 `;
 
 const RoomDetails = styled.div`
   display: flex;
   flex-direction: column;
+  margin-bottom: 5px;
 `;
 
 const Avatar = styled.img`
@@ -75,9 +95,17 @@ const Avatar = styled.img`
   margin-right: 10px;
 `;
 
+const TextComponent = styled.span`
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
+`;
+
 const Timestamp = styled.span`
   font-size: 12px;
   color: #757575;
+  align-self: flex-end;
 `;
 
 interface Timestamp {
@@ -189,8 +217,10 @@ export default function ChatPage() {
               <Avatar src={room.avatarUrl} alt="Avatar" />
               <RoomContent>
                 <RoomDetails>
-                  <div>{room.username || "Unknown"}</div>
-                  <div>{room.text || "No messages yet"}</div>
+                  <TextComponent>{room.username || "Unknown"}</TextComponent>
+                  <TextComponent>
+                    {room.text || "No messages yet"}
+                  </TextComponent>
                 </RoomDetails>
                 <Timestamp>{room.createdAt}</Timestamp>
               </RoomContent>
