@@ -25,7 +25,7 @@ import { IoIosArrowBack } from "react-icons/io";
 
 const ChatLayout = styled.div`
   display: flex;
-  width: 100vw;
+  width: 100%;
   max-width: 800px;
   height: 100vh;
   margin: 0 auto;
@@ -39,7 +39,8 @@ const ChatContainer = styled.div`
   flex-grow: 1;
   background-color: #f0f0f0;
   overflow: hidden;
-  height: calc(100vh - 70px);
+  height: auto;
+  padding-bottom: 50px;
 `;
 
 const MessagesList = styled.div`
