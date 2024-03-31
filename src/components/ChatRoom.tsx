@@ -39,14 +39,14 @@ const ChatContainer = styled.div`
   flex-grow: 1;
   background-color: #f0f0f0;
   overflow: hidden;
-  height: auto;
-  padding-bottom: 50px;
+  height: calc(100vh - 100px);
 `;
 
 const MessagesList = styled.div`
   flex-grow: 1;
   overflow-y: auto;
   padding: 20px;
+  padding-bottom: 70px;
   background-color: white;
   margin-bottom: auto;
 `;
