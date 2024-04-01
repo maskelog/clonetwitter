@@ -100,12 +100,20 @@ const TextComponent = styled.span`
   overflow: hidden;
   text-overflow: ellipsis;
   flex-shrink: 1;
+
+  @media ${media.mobileM} {
+    font-size: 14px;
+  }
 `;
 
 const Timestamp = styled.span`
   font-size: 12px;
   color: #757575;
   align-self: flex-end;
+
+  @media ${media.mobileM} {
+    font-size: 10px;
+  }
 `;
 
 interface Timestamp {
