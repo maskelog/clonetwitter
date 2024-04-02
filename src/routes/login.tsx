@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { auth } from "../firebase";
 import { Link, useNavigate } from "react-router-dom";
 import { FirebaseError } from "firebase/app";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { getRedirectResult, signInWithEmailAndPassword } from "firebase/auth";
 import {
   Form,
   Error,
@@ -19,6 +19,17 @@ export default function CreateAccount() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const checkRedirectResult = async () => {
+      const result = await getRedirectResult(auth);
+      if (result?.user) {
+        navigate("/");
+      }
+    };
+
+    checkRedirectResult();
+  }, [navigate]);
 
   const onChage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const {
