@@ -53,6 +53,7 @@ export default function CreateAccount() {
 
       await setDoc(doc(db, "users", credentials.user.uid), {
         name: name,
+        displayName: name,
         email: email,
       });
 
