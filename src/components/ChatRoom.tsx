@@ -30,6 +30,7 @@ const ChatLayout = styled.div`
   height: 100vh;
   margin: 0 auto;
   overflow: hidden;
+  color: #fff;
 `;
 
 const ChatContainer = styled.div`
@@ -40,6 +41,8 @@ const ChatContainer = styled.div`
   background-color: #f0f0f0;
   overflow: hidden;
   height: calc(100vh - 100px);
+  border: 1px solid #333;
+  border-radius: 20px;
 `;
 
 const MessagesList = styled.div`
@@ -47,21 +50,26 @@ const MessagesList = styled.div`
   overflow-y: auto;
   padding: 20px;
   padding-bottom: 70px;
-  background-color: white;
+  background-color: black;
+  color: #fff;
   margin-bottom: auto;
 `;
 
 const MessageForm = styled.form`
   display: flex;
   padding: 10px;
-  background-color: #eee;
+  background-color: black;
+  border: 1px solid #333;
+  border-top: 1px solid #333;
 `;
 
 const Input = styled.input`
   flex-grow: 1;
   margin-right: 10px;
   padding: 10px;
-  border: 1px solid #ccc;
+  border: 1px solid #777;
+  background-color: #222;
+  color: #ddd;
   border-radius: 4px;
 `;
 
@@ -87,6 +95,7 @@ const BackButton = styled.button`
   padding: 10px;
   font-size: 24px;
   cursor: pointer;
+  color: #fff;
 
   &:hover {
     color: #007bff;

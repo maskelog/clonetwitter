@@ -21,16 +21,17 @@ const MessageContent = styled.div<{ isSentByCurrentUser: boolean }>`
 
 const MessageBubble = styled.div<{ isSentByCurrentUser: boolean }>`
   background-color: ${({ isSentByCurrentUser }) =>
-    isSentByCurrentUser ? "#DCF8C6" : "#ECECEC"};
+    isSentByCurrentUser ? "#0B93F6" : "#262D31"};
+  color: #ececec;
   border-radius: 20px;
   padding: 10px 20px;
-  color: #333;
   margin: 0 10px;
+  max-width: 80%;
 `;
 
 const Username = styled.span`
   font-size: 14px;
-  color: #555;
+  color: #adb5bd;
   margin: 5px 10px;
 `;
 
@@ -64,7 +65,7 @@ const Timestamp = styled.div<{ isSentByCurrentUser: boolean }>`
     isSentByCurrentUser ? "flex-end" : "flex-start"};
   margin-top: auto;
   font-size: 12px;
-  color: #666;
+  color: #adb5bd;
   margin-top: 5px;
 `;
 
@@ -81,15 +82,16 @@ const Image = styled.img`
 `;
 
 const Button = styled.button`
-  background-color: white;
-  color: black;
-  border-radius: 4px;
+  background-color: #333;
+  color: #fff;
   cursor: pointer;
-  border: none;
-  /* padding: 10px; */
+  border: 1px solid #444;
+  margin-top: 5px;
+  border-radius: 4px;
+  padding: 2px 5px;
 
   &:hover {
-    background-color: #f92626;
+    background-color: #555;
   }
 `;
 
