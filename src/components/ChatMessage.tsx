@@ -26,7 +26,7 @@ const MessageBubble = styled.div<{ isSentByCurrentUser: boolean }>`
   border-radius: 20px;
   padding: 10px 20px;
   margin: 0 10px;
-  max-width: 80%;
+  /* max-width: 80%; */
 `;
 
 const Username = styled.span`
