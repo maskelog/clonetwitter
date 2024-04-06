@@ -1,6 +1,10 @@
 import styled from "styled-components";
 import PostTweetForm from "../components/post-tweet-form";
 import Timeline from "../components/timeline";
+import TweetDetail from "../components/tweetDetail";
+import Profile from "./profile";
+import ChatPage from "./chat-page";
+import BookmarkPage from "./bookmark-page";
 
 const Wrapper = styled.div`
   display: grid;
@@ -18,6 +22,10 @@ export default function Home() {
     <Wrapper>
       <PostTweetForm />
       <Timeline />
+      <TweetDetail />
+      <Profile />
+      <ChatPage />
+      <BookmarkPage />
     </Wrapper>
   );
 }
