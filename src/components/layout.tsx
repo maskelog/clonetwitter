@@ -6,52 +6,86 @@ import { useNotifications } from "./NotificationProvider";
 const Wrapper = styled.div`
   display: grid;
   grid-template-areas: "menu content";
-  grid-template-columns: auto 1fr;
+  grid-template-columns: minmax(auto) 1fr;
   height: 100%;
   padding: 50px;
   width: 100%;
-  max-width: 860px;
+  max-width: 1200px;
   margin: 0 auto;
   background-color: black;
+  align-items: stretch;
+  background-color: rgba(0, 0, 0, 0);
+  border: 0 solid black;
+  box-sizing: border-box;
+  display: flex;
+  flex-basis: auto;
+  flex-direction: column;
+  flex-shrink: 0;
+  list-style: none;
+  margin: 0px;
+  min-height: 0px;
+  min-width: 0px;
+  padding: 0px;
+  position: relative;
+  text-decoration: none;
+  z-index: 0;
+
+  @media (min-width: 1440px) {
+    padding: 50px 100px;
+  }
 
   @media (max-width: 1024px) {
-    grid-template-areas:
-      "menu"
-      "content";
+    grid-template-areas: "menu" "content";
     grid-template-columns: 1fr;
     padding: 20px;
   }
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
-    grid-template-areas:
-      "menu"
-      "content";
+    grid-template-areas: "menu" "content";
+  }
+
+  @media (max-width: 414px), (max-width: 428px) {
+    padding: 20px;
   }
 `;
 
 const Menu = styled.div`
   grid-area: menu;
-  position: relative;
+  position: fixed;
+  top: 50px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  padding: 20px;
   gap: 20px;
+  padding: 15px;
+  background-color: black;
   z-index: 10;
 
-  @media (max-width: 1024px) {
+  @media (min-width: 1024px) {
+    top: 3%;
+    left: 5%;
+    transform: none;
+  }
+
+  @media (max-width: 1023px) {
+    top: auto;
+    bottom: 0;
+    left: 10;
     flex-direction: row;
     justify-content: space-around;
     align-items: center;
-    padding: 10px;
-    position: fixed;
-    bottom: 0;
-    left: 0;
     width: 100%;
-    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
-    background-color: black;
+    padding: 10px 0;
+    box-shadow: 0px -2px 5px rgba(0, 0, 0, 0.2);
+  }
+
+  @media (max-width: 414px), (max-width: 428px) {
+    gap: 15px;
+    padding: 10px 0;
   }
 `;
 

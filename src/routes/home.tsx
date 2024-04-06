@@ -5,9 +5,14 @@ import Timeline from "../components/timeline";
 const Wrapper = styled.div`
   display: grid;
   gap: 50px;
-  overflow-y: scroll;
-  grid-template-rows: 1fr 5fr;
+  overflow-y: auto;
+  grid-template-rows: auto auto;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
 `;
+
 export default function Home() {
   return (
     <Wrapper>
