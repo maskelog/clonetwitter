@@ -24,6 +24,8 @@ const Wrapper = styled.div`
 const Content = styled.div`
   grid-area: content;
   overflow-y: auto;
+  min-width: 600px;
+  width: 100%;
 `;
 
 const Menu = styled.nav`
