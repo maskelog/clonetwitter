@@ -1,7 +1,8 @@
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { auth } from "../firebase";
 import { useNotifications } from "./NotificationProvider";
+import { useEffect, useState } from "react";
 
 const Wrapper = styled.div`
   display: grid;
@@ -26,6 +27,56 @@ const Content = styled.div`
   overflow-y: auto;
   min-width: 600px;
   width: 100%;
+`;
+
+const shimmer = keyframes`
+  0% {
+    background-position: -468px 0
+  }
+  100% {
+    background-position: 468px 0
+  }
+`;
+
+const SkeletonWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  border: 1px solid #333;
+  border-radius: 20px;
+  margin-bottom: 5px;
+  background-color: #000;
+  color: #fff;
+  position: relative;
+  padding-bottom: 60px;
+  line-height: 120%;
+`;
+
+const SkeletonItem = styled.div`
+  background: #333;
+  background-image: linear-gradient(
+    to right,
+    #333 0%,
+    #999 20%,
+    #333 40%,
+    #333 100%
+  );
+  background-repeat: no-repeat;
+  background-size: 800px 104px;
+  display: inline-block;
+  line-height: 1;
+  width: 100%;
+  height: 20px;
+  animation-duration: 1.5s;
+  animation-fill-mode: forwards;
+  animation-iteration-count: infinite;
+  animation-name: ${shimmer};
+  animation-timing-function: linear;
+  margin-bottom: 15px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
 `;
 
 const Menu = styled.nav`
@@ -90,7 +141,13 @@ interface MenuItemProps {
 
 const Layout: React.FC = () => {
   const navigate = useNavigate();
+  const [isLoading, setLoading] = useState(true);
   const { hasNotification, hasBookmark } = useNotifications();
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const onLogOut = async () => {
     const ok = window.confirm("Are you sure you want to log out?");
@@ -187,7 +244,22 @@ const Layout: React.FC = () => {
         </MenuItem>
       </Menu>
       <Content>
-        <Outlet />
+        {isLoading ? (
+          <>
+            <SkeletonWrapper>
+              <SkeletonItem />
+              <SkeletonItem />
+              <SkeletonItem />
+            </SkeletonWrapper>
+            <SkeletonWrapper>
+              <SkeletonItem />
+              <SkeletonItem />
+              <SkeletonItem />
+            </SkeletonWrapper>
+          </>
+        ) : (
+          <Outlet />
+        )}
       </Content>
     </Wrapper>
   );
