@@ -41,15 +41,12 @@ const shimmer = keyframes`
 const SkeletonWrapper = styled.div`
   display: flex;
   flex-direction: column;
+  gap: 10px;
   padding: 20px;
   border: 1px solid #333;
   border-radius: 20px;
-  margin-bottom: 5px;
   background-color: #000;
-  color: #fff;
-  position: relative;
-  padding-bottom: 60px;
-  line-height: 120%;
+  margin-bottom: 10px;
 `;
 
 const SkeletonItem = styled.div`
@@ -63,20 +60,52 @@ const SkeletonItem = styled.div`
   );
   background-repeat: no-repeat;
   background-size: 800px 104px;
-  display: inline-block;
-  line-height: 1;
-  width: 100%;
-  height: 20px;
-  animation-duration: 1.5s;
-  animation-fill-mode: forwards;
-  animation-iteration-count: infinite;
-  animation-name: ${shimmer};
-  animation-timing-function: linear;
-  margin-bottom: 15px;
+  animation: ${shimmer} 1.5s infinite linear;
+  border-radius: 20px;
+`;
 
-  &:last-child {
-    margin-bottom: 0;
-  }
+const TweetSkeleton = styled.div`
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  border: 1px solid #333;
+  border-radius: 20px;
+  margin-bottom: 5px;
+  background-color: #000;
+  position: relative;
+  padding-bottom: 60px;
+  line-height: 120%;
+`;
+
+const SkeletonUsername = styled(SkeletonItem)`
+  width: 30%;
+  height: 16px;
+  margin-bottom: 10px;
+`;
+
+const SkeletonText = styled(SkeletonItem)`
+  width: 100%;
+  height: 14px;
+  margin-bottom: 10px;
+`;
+
+const SkeletonPhoto = styled(SkeletonItem)`
+  width: 100%;
+  height: 200px;
+  margin-bottom: 10px;
+`;
+
+const SkeletonActionContainer = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+`;
+
+const SkeletonActionButton = styled(SkeletonItem)`
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
 `;
 
 const Menu = styled.nav`
@@ -139,10 +168,10 @@ interface MenuItemProps {
   isBookmarked?: boolean;
 }
 
-const Layout: React.FC = () => {
+const Layout = () => {
   const navigate = useNavigate();
-  const [isLoading, setLoading] = useState(true);
   const { hasNotification, hasBookmark } = useNotifications();
+  const [isLoading, setLoading] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 2000);
@@ -246,16 +275,26 @@ const Layout: React.FC = () => {
       <Content>
         {isLoading ? (
           <>
+            {/* PostTweetForm 스켈레톤 */}
             <SkeletonWrapper>
-              <SkeletonItem />
-              <SkeletonItem />
-              <SkeletonItem />
+              <SkeletonItem style={{ height: "100px", marginBottom: "20px" }} />
+              <SkeletonItem style={{ height: "40px" }} />
+              <SkeletonItem style={{ height: "40px" }} />
             </SkeletonWrapper>
-            <SkeletonWrapper>
-              <SkeletonItem />
-              <SkeletonItem />
-              <SkeletonItem />
-            </SkeletonWrapper>
+
+            {/* 트윗 스켈레톤 */}
+            <TweetSkeleton>
+              <SkeletonUsername />
+              <SkeletonText />
+              <SkeletonText />
+              <SkeletonPhoto />
+              <SkeletonActionContainer>
+                <SkeletonActionButton />
+                <SkeletonActionButton />
+                <SkeletonActionButton />
+                <SkeletonActionButton />
+              </SkeletonActionContainer>
+            </TweetSkeleton>
           </>
         ) : (
           <Outlet />
