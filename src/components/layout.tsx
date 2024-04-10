@@ -25,8 +25,16 @@ const Wrapper = styled.div`
 const Content = styled.div`
   grid-area: content;
   overflow-y: auto;
-  min-width: 600px;
   width: 100%;
+  min-width: 400px;
+
+  @media (min-width: 768px) {
+    min-width: 500px;
+  }
+
+  @media (min-width: 1024px) {
+    min-width: 800px;
+  }
 `;
 
 const shimmer = keyframes`
@@ -47,6 +55,18 @@ const SkeletonWrapper = styled.div`
   border-radius: 20px;
   background-color: #000;
   margin-bottom: 10px;
+
+  @media (max-width: 768px) {
+    min-width: 100%;
+  }
+
+  @media (min-width: 768px) {
+    min-width: 500px;
+  }
+
+  @media (min-width: 1024px) {
+    min-width: 800px;
+  }
 `;
 
 const SkeletonItem = styled.div`
@@ -275,13 +295,6 @@ const Layout = () => {
       <Content>
         {isLoading ? (
           <>
-            {/* PostTweetForm 스켈레톤 */}
-            <SkeletonWrapper>
-              <SkeletonItem style={{ height: "100px", marginBottom: "20px" }} />
-              <SkeletonItem style={{ height: "40px" }} />
-              <SkeletonItem style={{ height: "40px" }} />
-            </SkeletonWrapper>
-
             {/* 트윗 스켈레톤 */}
             <TweetSkeleton>
               <SkeletonUsername />
@@ -295,6 +308,13 @@ const Layout = () => {
                 <SkeletonActionButton />
               </SkeletonActionContainer>
             </TweetSkeleton>
+
+            {/* PostTweetForm 스켈레톤 */}
+            <SkeletonWrapper>
+              <SkeletonItem style={{ height: "100px", marginBottom: "20px" }} />
+              <SkeletonItem style={{ height: "40px" }} />
+              <SkeletonItem style={{ height: "40px" }} />
+            </SkeletonWrapper>
           </>
         ) : (
           <Outlet />

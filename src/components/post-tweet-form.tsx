@@ -28,6 +28,11 @@ const TextArea = styled.textarea`
     outline: none;
     border-color: #1d9bf0;
   }
+
+  @media (max-width: 768px) {
+    font-size: 14px;
+    padding: 10px;
+  }
 `;
 
 const AttachFileButton = styled.label`
@@ -39,6 +44,11 @@ const AttachFileButton = styled.label`
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+
+  @media (max-width: 768px) {
+    font-size: 12px;
+    padding: 8px 0px;
+  }
 `;
 
 const AttachFileInput = styled.input`
@@ -56,6 +66,11 @@ const SubmitBtn = styled.input`
   &:hover,
   &:active {
     opacity: 0.9;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 14px;
+    padding: 8px 0px;
   }
 `;
 

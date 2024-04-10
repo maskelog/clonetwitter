@@ -34,6 +34,17 @@ const Wrapper = styled.div`
   position: relative;
   padding-bottom: 60px;
   line-height: 120%;
+
+  @media (min-width: 768px) {
+    padding: 30px;
+    margin-bottom: 10px;
+    font-size: 16px;
+  }
+
+  @media (min-width: 1024px) {
+    max-width: 600px;
+    margin: auto;
+  }
 `;
 
 const TextArea = styled.textarea`
@@ -47,6 +58,10 @@ const TextArea = styled.textarea`
   resize: vertical;
   margin-bottom: 10px;
   width: 100%;
+
+  @media (min-width: 768px) {
+    font-size: 16px;
+  }
 `;
 
 const Column = styled.div`
@@ -60,18 +75,30 @@ const Photo = styled.img`
   max-width: 100px;
   border-radius: 8px;
   margin-top: 10px;
+
+  @media (min-width: 768px) {
+    max-width: 150px;
+  }
 `;
 
 const Username = styled.span`
   font-weight: bold;
   font-size: 16px;
   color: #fff;
+
+  @media (min-width: 768px) {
+    font-size: 18px;
+  }
 `;
 
 const Payload = styled.p`
   font-size: 14px;
   margin-top: 10px;
   color: #fff;
+
+  @media (min-width: 768px) {
+    font-size: 16px;
+  }
 `;
 
 const Button = styled.button`
