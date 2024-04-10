@@ -4,7 +4,7 @@ import Timeline from "../components/timeline";
 
 const Wrapper = styled.div`
   display: grid;
-  gap: 50px;
+  gap: 20px;
   overflow-y: auto;
   grid-template-rows: auto auto;
   width: 100%;
