@@ -194,8 +194,17 @@ const Layout = () => {
   const [isLoading, setLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 2000);
-    return () => clearTimeout(timer);
+    const fetchTweetsAndRetweets = async () => {
+      setLoading(true);
+      try {
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTweetsAndRetweets();
   }, []);
 
   const onLogOut = async () => {
