@@ -20,11 +20,13 @@ import ProtectedRoute from "./components/protected-route";
 const darkTheme = {
   background: "#020202",
   color: "white",
+  text: "#FFF",
 };
 
 const lightTheme = {
   background: "#FFF",
   color: "#333",
+  text: "#333",
 };
 
 const ToggleButton = styled.div`
