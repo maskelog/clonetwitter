@@ -10,7 +10,7 @@ const Form = styled.form`
   gap: 10px;
 `;
 const TextArea = styled.textarea`
-  border: 2px solid ${(props) => props.theme.color};
+  border: 2px solid ${(props) => props.theme.text};
   padding: 20px;
   border-radius: 20px;
   font-size: 16px;

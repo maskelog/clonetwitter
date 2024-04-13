@@ -18,39 +18,16 @@ import { reset } from "styled-reset";
 import ProtectedRoute from "./components/protected-route";
 
 const darkTheme = {
-  background: "#020202",
-  color: "white",
-  text: "#FFF",
+  background: "#000000",
+  text: "#FFFFFF",
+  svgFill: "#FFFFFF",
 };
 
 const lightTheme = {
-  background: "#FFF",
-  color: "#333",
-  text: "#333",
+  background: "#FFFFFF",
+  text: "#333333",
+  svgFill: "#333333",
 };
-
-const ToggleButton = styled.div`
-  position: relative;
-  width: 50px;
-  height: 24px;
-  background-color: ${(props) =>
-    props.theme.background === "#FFF" ? "#ccc" : "#333"};
-  border-radius: 50px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-
-  &::after {
-    content: "";
-    position: absolute;
-    top: 2px;
-    left: ${(props) => (props.theme.background === "#FFF" ? "2px" : "26px")};
-    width: 20px;
-    height: 20px;
-    background-color: white;
-    border-radius: 50%;
-    transition: left 0.2s;
-  }
-`;
 
 const GlobalStyles = createGlobalStyle`
   ${reset}
@@ -89,7 +66,9 @@ function App() {
       element: (
         <ProtectedRoute>
           <NotificationProvider>
-            <Layout toggleTheme={toggleTheme} />
+            <Layout
+              toggleTheme={() => setTheme(theme === "light" ? "dark" : "light")}
+            />
           </NotificationProvider>
         </ProtectedRoute>
       ),
@@ -116,7 +95,6 @@ function App() {
       <GlobalStyles />
       <Wrapper>
         {isLoading ? <LoadingScreen /> : <RouterProvider router={router} />}
-        <ToggleButton onClick={toggleTheme} />
       </Wrapper>
     </ThemeProvider>
   );

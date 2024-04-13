@@ -130,7 +130,8 @@ const SkeletonActionButton = styled(SkeletonItem)`
 
 const Menu = styled.nav`
   grid-area: menu;
-  background-color: black;
+  background-color: ${(props) => props.theme.background};
+  color: ${(props) => props.theme.text};
   padding: 10px;
   position: fixed;
   top: 0;
@@ -149,7 +150,6 @@ const Menu = styled.nav`
     z-index: 10;
   }
 `;
-
 const NotificationDot = styled.span`
   position: absolute;
   top: -5px;
@@ -165,7 +165,7 @@ const MenuItem = styled.div<MenuItemProps>`
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid white;
+  border: 2px solid ${(props) => props.theme.text};
   height: 50px;
   width: 50px;
   border-radius: 50%;
@@ -173,7 +173,7 @@ const MenuItem = styled.div<MenuItemProps>`
 
   svg {
     width: 30px;
-    fill: ${(props) => (props.isBookmarked ? "#f0b90b" : "white")};
+    fill: ${(props) => (props.isBookmarked ? "#f0b90b" : props.theme.svgFill)};
   }
 
   &.log-out {
@@ -181,6 +181,29 @@ const MenuItem = styled.div<MenuItemProps>`
     svg {
       fill: tomato;
     }
+  }
+`;
+
+const ToggleButton = styled.div`
+  position: relative;
+  width: 50px;
+  height: 24px;
+  background-color: ${(props) =>
+    props.theme.background === "#FFFFFF" ? "#ccc" : "#333"};
+  border-radius: 50px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: ${(props) => (props.theme.background === "#FFFFFF" ? "2px" : "26px")};
+    width: 20px;
+    height: 20px;
+    background-color: white;
+    border-radius: 50%;
+    transition: left 0.2s;
   }
 `;
 
@@ -192,7 +215,7 @@ interface LayoutProps {
   toggleTheme: () => void;
 }
 
-const Layout: React.FC<LayoutProps> = () => {
+const Layout: React.FC<LayoutProps> = ({ toggleTheme }) => {
   const navigate = useNavigate();
   const { hasNotification, hasBookmark } = useNotifications();
   const [isLoading, setLoading] = useState(true);
@@ -254,7 +277,7 @@ const Layout: React.FC<LayoutProps> = () => {
           <MenuItem>
             {hasNotification && <NotificationDot />}
             <svg
-              fill="none"
+              fill="currentColor"
               strokeWidth={1.5}
               viewBox="0 0 24 24"
               xmlns="http://www.w3.org/2000/svg"
@@ -271,7 +294,7 @@ const Layout: React.FC<LayoutProps> = () => {
         <Link to="/BookmarkPage">
           <MenuItem isBookmarked={hasBookmark}>
             <svg
-              fill="none"
+              fill="currentColor"
               strokeWidth={1.5}
               viewBox="0 0 24 24"
               xmlns="http://www.w3.org/2000/svg"
@@ -304,6 +327,7 @@ const Layout: React.FC<LayoutProps> = () => {
             />
           </svg>
         </MenuItem>
+        <ToggleButton onClick={toggleTheme} />
       </Menu>
       <Content>
         {isLoading ? (
