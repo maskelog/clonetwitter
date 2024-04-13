@@ -26,11 +26,11 @@ const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
   padding: 20px;
-  border: 1px solid #333;
+  border: 1px solid ${(props) => props.theme.color};
   border-radius: 20px;
   margin-bottom: 5px;
-  background-color: #000;
-  color: #fff;
+  background-color: ${(props) => props.theme.background};
+  color: ${(props) => props.theme.color};
   position: relative;
   padding-bottom: 60px;
   line-height: 120%;
@@ -84,7 +84,7 @@ const Photo = styled.img`
 const Username = styled.span`
   font-weight: bold;
   font-size: 16px;
-  color: #fff;
+  color: ${(props) => props.theme.text};
 
   @media (min-width: 768px) {
     font-size: 18px;
@@ -94,7 +94,7 @@ const Username = styled.span`
 const Payload = styled.p`
   font-size: 14px;
   margin-top: 10px;
-  color: #fff;
+  color: ${(props) => props.theme.text};
 
   @media (min-width: 768px) {
     font-size: 16px;
@@ -103,7 +103,7 @@ const Payload = styled.p`
 
 const Button = styled.button`
   background-color: #1d9bf0;
-  color: white;
+  color: ${(props) => props.theme.color};
   border: none;
   padding: 10px 10px;
   border-radius: 20px;
@@ -189,15 +189,10 @@ const ActionButton = styled.button`
 `;
 
 const ActionIcon = styled.svg`
+  fill: none;
+  stroke: ${(props) => props.theme.text};
   width: 24px;
   height: 24px;
-  margin-right: 5px;
-`;
-
-const RetweetIcon = styled.svg`
-  width: 24px;
-  height: 24px;
-  margin-right: 5px;
 `;
 
 const LikeIcon = styled(ActionIcon)<LikeIconProps>`
@@ -208,6 +203,7 @@ const LikeIcon = styled(ActionIcon)<LikeIconProps>`
         `
       : css`
           fill: none;
+          stroke: ${(props) => props.theme.text};
         `}
 `;
 
@@ -219,7 +215,13 @@ const BookmarkIcon = styled(ActionIcon)<BookmarkIconProps>`
         `
       : css`
           fill: none;
+          stroke: ${(props) => props.theme.text};
         `}
+`;
+
+const RetweetIcon = styled(ActionIcon)`
+  fill: none;
+  stroke: ${(props) => props.theme.text};
 `;
 
 const RetweetOptions = styled.div`
