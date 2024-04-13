@@ -188,7 +188,11 @@ interface MenuItemProps {
   isBookmarked?: boolean;
 }
 
-const Layout = () => {
+interface LayoutProps {
+  toggleTheme: () => void;
+}
+
+const Layout: React.FC<LayoutProps> = () => {
   const navigate = useNavigate();
   const { hasNotification, hasBookmark } = useNotifications();
   const [isLoading, setLoading] = useState(true);

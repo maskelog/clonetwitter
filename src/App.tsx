@@ -17,7 +17,6 @@ import { auth } from "./firebase";
 import { reset } from "styled-reset";
 import ProtectedRoute from "./components/protected-route";
 
-// Define our themes
 const darkTheme = {
   background: "#020202",
   color: "white",
@@ -32,7 +31,8 @@ const ToggleButton = styled.div`
   position: relative;
   width: 50px;
   height: 24px;
-  background-color: ${(props) => (props.theme === "light" ? "#ccc" : "#333")};
+  background-color: ${(props) =>
+    props.theme.background === "#FFF" ? "#ccc" : "#333"};
   border-radius: 50px;
   cursor: pointer;
   transition: background-color 0.2s;
@@ -41,7 +41,7 @@ const ToggleButton = styled.div`
     content: "";
     position: absolute;
     top: 2px;
-    left: ${(props) => (props.theme === "light" ? "2px" : "26px")};
+    left: ${(props) => (props.theme.background === "#FFF" ? "2px" : "26px")};
     width: 20px;
     height: 20px;
     background-color: white;
@@ -50,7 +50,6 @@ const ToggleButton = styled.div`
   }
 `;
 
-// Global styles that apply theme changes
 const GlobalStyles = createGlobalStyle`
   ${reset}
   * {
@@ -73,7 +72,7 @@ function App() {
   const [theme, setTheme] = useState("light");
 
   useEffect(() => {
-    auth.onAuthStateChanged((user) => {
+    auth.onAuthStateChanged(() => {
       setLoading(false);
     });
   }, []);
@@ -115,7 +114,7 @@ function App() {
       <GlobalStyles />
       <Wrapper>
         {isLoading ? <LoadingScreen /> : <RouterProvider router={router} />}
-        <ToggleButton theme={theme} onClick={toggleTheme} />
+        <ToggleButton onClick={toggleTheme} />
       </Wrapper>
     </ThemeProvider>
   );
