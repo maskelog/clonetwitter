@@ -34,6 +34,7 @@ const Wrapper = styled.div`
   position: relative;
   padding-bottom: 60px;
   line-height: 120%;
+  min-width: 550px;
 
   @media (min-width: 768px) {
     padding: 30px;
@@ -51,12 +52,13 @@ const TextArea = styled.textarea`
   padding: 10px;
   border-radius: 20px;
   border: 2px solid #fff;
-  color: #fff;
+  color: ${(props) => props.theme.text};
   background: transparent;
   font-size: 14px;
   height: 100px;
+  min-height: 100px;
   resize: vertical;
-  margin-bottom: 10px;
+  margin-bottom: 30px;
   width: 100%;
 
   @media (min-width: 768px) {
@@ -103,7 +105,7 @@ const Payload = styled.p`
 
 const Button = styled.button`
   background-color: #1d9bf0;
-  color: ${(props) => props.theme.text};
+  color: white;
   border: none;
   padding: 10px 10px;
   border-radius: 20px;
@@ -141,16 +143,20 @@ const DropdownMenu = styled.div<{ show: boolean }>`
   box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
   z-index: 1;
   display: ${({ show }) => (show ? "block" : "none")};
+  flex-direction: column;
 `;
 
 const DrawerMenu = styled.div`
   color: ${(props) => props.theme.text};
 `;
 
-const MenuItem = styled.div`
+const MenuItem = styled.button`
   padding: 8px 16px;
   cursor: pointer;
   color: #fff;
+  background: none;
+  border: none;
+  text-align: left;
 
   &:hover {
     background-color: #555;
@@ -158,21 +164,31 @@ const MenuItem = styled.div`
 
   &.edit {
     background-color: #1d9bf0;
-    border-radius: 8px 8px 0 0;
+    border-radius: 8px 0 0 8px;
   }
 
   &.delete {
     background-color: tomato;
-    border-radius: 0 0 8px 8px;
+    border-radius: 0 8px 8px 0;
+  }
+
+  &:focus {
+    outline: none;
   }
 `;
 
-const ButtonsContainer = styled.div`
+const ActionButtonsContainer = styled.div`
   position: absolute;
   bottom: 10px;
   right: 10px;
   display: flex;
   align-items: center;
+`;
+
+const EditButtonsContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
 `;
 
 const ActionButton = styled.button`
@@ -367,21 +383,34 @@ const Tweet: React.FC<ITweet> = ({
   };
 
   const handleMenuToggle = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation(); // 상위 요소로의 이벤트 전파 방지
-    setShowMenu((prevShowMenu) => !prevShowMenu); // 상태 토글
+    event.stopPropagation();
+    setShowMenu((prevShowMenu) => !prevShowMenu);
   };
 
-  const handleDelete = async () => {
+  const handleDelete = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
     if (window.confirm("Are you sure you want to delete this tweet?")) {
       await deleteDoc(doc(db, "tweets", id));
-      photo && (await deleteObject(storageRef(storage, photo)));
+      if (photo) await deleteObject(storageRef(storage, photo));
     }
   };
 
-  const handleEdit = async () => {
-    await updateDoc(doc(db, "tweets", id), { tweet: editTweet });
-    isEditing && fileInputRef.current?.click();
-    setIsEditing(false);
+  const handleEdit = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    setIsEditing(true);
+  };
+
+  const handleSave = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    try {
+      await updateDoc(doc(db, "tweets", id), { tweet: editTweet });
+      setIsEditing(false);
+      alert("Changes saved successfully.");
+    } catch (error) {
+      console.error("Failed to save changes:", error);
+      alert("Failed to save changes. Please try again.");
+    }
   };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -394,6 +423,14 @@ const Tweet: React.FC<ITweet> = ({
     }
   };
 
+  const handlePhotoButtonClick = (
+    event: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    event.preventDefault();
+    event.stopPropagation();
+    fileInputRef.current?.click();
+  };
+
   const handleUsernameClick = (event: React.MouseEvent<HTMLSpanElement>) => {
     // 사용자 ID로 프로필 페이지로 이동
     event.stopPropagation();
@@ -401,7 +438,9 @@ const Tweet: React.FC<ITweet> = ({
   };
 
   const handleTweetClick = () => {
-    navigate(`/tweets/${id}`); // 트윗 상세 페이지로 이동
+    if (!isEditing) {
+      navigate(`/tweets/${id}`);
+    }
   };
 
   const handleShare = async (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -518,7 +557,7 @@ const Tweet: React.FC<ITweet> = ({
               <DrawerMenu> ⋮ </DrawerMenu>
             </Button>
             <DropdownMenu show={showMenu}>
-              <MenuItem className="edit" onClick={() => setIsEditing(true)}>
+              <MenuItem className="edit" onClick={handleEdit}>
                 Edit
               </MenuItem>
               <MenuItem className="delete" onClick={handleDelete}>
@@ -534,28 +573,26 @@ const Tweet: React.FC<ITweet> = ({
             value={editTweet}
             onChange={(e) => setEditTweet(e.target.value)}
           />
-          <ButtonsContainer>
-            <Button
-              className="edit"
-              onClick={() => fileInputRef.current?.click()}
-            >
+          <EditButtonsContainer>
+            <Button className="edit" onClick={handlePhotoButtonClick}>
               Change Photo
             </Button>
-            <Button className="edit" onClick={handleEdit}>
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              onChange={handleImageChange}
+              style={{ display: "none" }}
+            />
+            <Button className="save" onClick={handleSave}>
               Save
             </Button>
-          </ButtonsContainer>
-          <input
-            type="file"
-            accept="image/*"
-            ref={fileInputRef}
-            onChange={handleImageChange}
-            style={{ display: "none" }}
-          />
+          </EditButtonsContainer>
         </>
       ) : (
         <Payload>{tweet}</Payload>
       )}
+
       {photo && (
         <Photo
           src={photo}
@@ -571,7 +608,7 @@ const Tweet: React.FC<ITweet> = ({
       {isRetweet && (
         <QuotedTweet>재게시됨 @ {retweetUsername || "알 수 없음"}</QuotedTweet>
       )}
-      <ButtonsContainer onClick={handleButtonClick}>
+      <ActionButtonsContainer onClick={handleButtonClick}>
         <ActionButton className="retweet" onClick={toggleRetweetOptions}>
           <RetweetIcon
             fill="none"
@@ -670,7 +707,7 @@ const Tweet: React.FC<ITweet> = ({
             />
           </ActionIcon>
         </ActionButton>
-      </ButtonsContainer>
+      </ActionButtonsContainer>
     </Wrapper>
   );
 };
