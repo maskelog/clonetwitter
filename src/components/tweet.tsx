@@ -387,6 +387,10 @@ const Tweet: React.FC<ITweet> = ({
     setShowMenu((prevShowMenu) => !prevShowMenu);
   };
 
+  const handleMenuClose = () => {
+    setShowMenu(false);
+  };
+
   const handleDelete = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     if (window.confirm("Are you sure you want to delete this tweet?")) {
@@ -556,7 +560,10 @@ const Tweet: React.FC<ITweet> = ({
             <Button className="menu" onClick={handleMenuToggle}>
               <DrawerMenu> ⋮ </DrawerMenu>
             </Button>
-            <DropdownMenu show={showMenu}>
+            <DropdownMenu
+              show={showMenu && !isEditing}
+              onMouseLeave={handleMenuClose}
+            >
               <MenuItem className="edit" onClick={handleEdit}>
                 Edit
               </MenuItem>
