@@ -103,7 +103,7 @@ const Payload = styled.p`
 
 const Button = styled.button`
   background-color: #1d9bf0;
-  color: ${(props) => props.theme.color};
+  color: ${(props) => props.theme.text};
   border: none;
   padding: 10px 10px;
   border-radius: 20px;
@@ -133,13 +133,18 @@ const Button = styled.button`
 
 const DropdownMenu = styled.div<{ show: boolean }>`
   position: absolute;
-  background-color: black;
+  background-color: ${(props) => props.theme.background};
+  border-radius: 20px;
   right: 0;
   top: 30px;
   min-width: 120px;
   box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
   z-index: 1;
   display: ${({ show }) => (show ? "block" : "none")};
+`;
+
+const DrawerMenu = styled.div`
+  color: ${(props) => props.theme.text};
 `;
 
 const MenuItem = styled.div`
@@ -510,7 +515,7 @@ const Tweet: React.FC<ITweet> = ({
         {auth.currentUser?.uid === userId && (
           <>
             <Button className="menu" onClick={handleMenuToggle}>
-              ⋮
+              <DrawerMenu> ⋮ </DrawerMenu>
             </Button>
             <DropdownMenu show={showMenu}>
               <MenuItem className="edit" onClick={() => setIsEditing(true)}>
