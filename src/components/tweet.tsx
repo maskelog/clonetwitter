@@ -329,6 +329,7 @@ const Tweet: React.FC<ITweet> = ({
   const [showMenu, setShowMenu] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editTweet, setEditTweet] = useState(tweet);
+  const [currentTweet, setCurrentTweet] = useState(tweet);
   const [bookmarked, setBookmarked] = useState(isBookmarked);
   const [liked, setLiked] = useState<boolean>(false);
   const [likeCount, setLikeCount] = useState<number>(0);
@@ -410,6 +411,7 @@ const Tweet: React.FC<ITweet> = ({
     try {
       await updateDoc(doc(db, "tweets", id), { tweet: editTweet });
       setIsEditing(false);
+      setCurrentTweet(editTweet); // Update the current tweet state with the new value
       alert("Changes saved successfully.");
     } catch (error) {
       console.error("Failed to save changes:", error);
@@ -597,7 +599,7 @@ const Tweet: React.FC<ITweet> = ({
           </EditButtonsContainer>
         </>
       ) : (
-        <Payload>{tweet}</Payload>
+        <Payload>{currentTweet}</Payload>
       )}
 
       {photo && (
