@@ -23,7 +23,7 @@ const Wrapper = styled.div`
   border: 1px solid #333;
   border-radius: 20px;
   margin-bottom: 20px;
-  background-color: #000;
+  background-color: ${(props) => props.theme.background};
   color: #fff;
   position: relative;
   line-height: 120%;
@@ -32,13 +32,13 @@ const Wrapper = styled.div`
 const Username = styled.h2`
   font-weight: bold;
   font-size: 16px;
-  color: #fff;
+  color: ${(props) => props.theme.text};
   margin-bottom: 10px;
 `;
 
 const Content = styled.p`
   font-size: 14px;
-  color: #fff;
+  color: ${(props) => props.theme.text};
   margin: 10px 0;
 `;
 
@@ -74,6 +74,7 @@ const ShareIcon = styled.svg`
   width: 24px;
   height: 24px;
   margin-right: 5px;
+  stroke: ${(props) => props.theme.text};
 `;
 
 const BookmarkButton = styled.button`
@@ -94,9 +95,11 @@ const ActionIcon = styled.svg`
   width: 24px;
   height: 24px;
   margin-right: 5px;
+  fill: none;
+  stroke: ${(props) => props.theme.text};
 `;
 
-const BookmarkIcon = styled(ActionIcon)<{ isBookmarked: boolean }>`
+const BookmarkIcon = styled(ActionIcon)<BookmarkIconProps>`
   ${(props) =>
     props.isBookmarked
       ? css`
@@ -104,6 +107,7 @@ const BookmarkIcon = styled(ActionIcon)<{ isBookmarked: boolean }>`
         `
       : css`
           fill: none;
+          stroke: ${(props) => props.theme.text};
         `}
 `;
 
@@ -132,6 +136,11 @@ const LikedButton = styled.button`
   }
 `;
 
+const LikeCountSpan = styled.span`
+  margin-left: 2px;
+  color: ${(props) => props.theme.text};
+`;
+
 const RetweetButton = styled.button`
   border: none;
   background: none;
@@ -146,10 +155,9 @@ const RetweetButton = styled.button`
   }
 `;
 
-const RetweetIcon = styled.svg`
-  width: 24px;
-  height: 24px;
-  margin-right: 5px;
+const RetweetIcon = styled(ActionIcon)`
+  fill: none;
+  stroke: ${(props) => props.theme.text};
 `;
 
 const RetweetOptions = styled.div`
@@ -191,6 +199,10 @@ const RetweetOptionButton = styled.button`
 
 interface LikeIconProps {
   isLiked: boolean;
+}
+
+interface BookmarkIconProps {
+  isBookmarked: boolean;
 }
 
 const TweetDetail: React.FC = () => {
@@ -427,9 +439,7 @@ const TweetDetail: React.FC = () => {
                   d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"
                 />
               </LikeIcon>
-              {likeCount > 0 && (
-                <span style={{ marginLeft: "2px" }}>{likeCount}</span>
-              )}
+              {likeCount > 0 && <LikeCountSpan>{likeCount}</LikeCountSpan>}
             </LikedButton>
 
             <ShareButton onClick={handleShare}>
