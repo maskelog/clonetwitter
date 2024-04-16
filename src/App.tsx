@@ -56,10 +56,6 @@ function App() {
     });
   }, []);
 
-  const toggleTheme = () => {
-    setTheme(theme === "light" ? "dark" : "light");
-  };
-
   const router = createBrowserRouter([
     {
       path: "/",
