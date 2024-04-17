@@ -34,17 +34,26 @@ const Wrapper = styled.div`
   position: relative;
   padding-bottom: 60px;
   line-height: 120%;
-  min-width: 550px;
+
+  @media (max-width: 360px) {
+    min-width: 320px;
+  }
+
+  @media (min-width: 375px) {
+    min-width: 375px;
+  }
 
   @media (min-width: 768px) {
     padding: 30px;
     margin-bottom: 10px;
     font-size: 16px;
+    min-width: 500px;
   }
 
   @media (min-width: 1024px) {
     max-width: 600px;
     margin: auto;
+    min-width: 600px;
   }
 `;
 
