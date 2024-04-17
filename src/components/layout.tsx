@@ -1,4 +1,4 @@
-import styled, { keyframes } from "styled-components";
+import styled, { keyframes, useTheme } from "styled-components";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { auth } from "../firebase";
 import { useNotifications } from "./NotificationProvider";
@@ -184,7 +184,9 @@ const MenuItem = styled.div<MenuItemProps>`
   }
 `;
 
-const ToggleButton = styled.div`
+const Toggle = styled.div``;
+
+const ToggleButton = styled.button`
   position: relative;
   width: 50px;
   height: 24px;
@@ -193,6 +195,9 @@ const ToggleButton = styled.div`
   border-radius: 50px;
   cursor: pointer;
   transition: background-color 0.2s;
+  display: flex;
+  justify-content: space-between;
+  padding: 2px;
 
   &::after {
     content: "";
@@ -205,6 +210,17 @@ const ToggleButton = styled.div`
     border-radius: 50%;
     transition: left 0.2s;
   }
+`;
+
+const ToggleLabel = styled.div`
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 6px;
+  color: ${(props) => props.theme.text};
+  font-size: 12px;
+  text-align: center;
 `;
 
 interface MenuItemProps {
@@ -241,6 +257,10 @@ const Layout: React.FC<LayoutProps> = ({ toggleTheme }) => {
       navigate("/login");
     }
   };
+
+  const theme = useTheme();
+
+  const toggleButtonLabel = theme.background === "#FFFFFF" ? "Light" : "Dark";
 
   return (
     <Wrapper>
@@ -327,7 +347,13 @@ const Layout: React.FC<LayoutProps> = ({ toggleTheme }) => {
             />
           </svg>
         </MenuItem>
-        <ToggleButton onClick={toggleTheme} />
+        <Toggle>
+          <ToggleButton onClick={toggleTheme}>
+            <ToggleLabel>
+              {toggleButtonLabel === "Light" ? "Dark" : "Light"}
+            </ToggleLabel>
+          </ToggleButton>
+        </Toggle>
       </Menu>
       <Content>
         {isLoading ? (
