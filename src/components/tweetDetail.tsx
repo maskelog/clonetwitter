@@ -27,6 +27,25 @@ const Wrapper = styled.div`
   color: #fff;
   position: relative;
   line-height: 120%;
+  /* overflow-x: hidden; */
+  width: 100%;
+  box-sizing: border-box;
+
+  @media (max-width: 360px) {
+    max-width: 100%;
+  }
+
+  @media (min-width: 375px) {
+    max-width: 375px;
+  }
+
+  @media (min-width: 768px) {
+    max-width: 500px;
+  }
+
+  @media (min-width: 1024px) {
+    max-width: 800px;
+  }
 `;
 
 const Username = styled.h2`

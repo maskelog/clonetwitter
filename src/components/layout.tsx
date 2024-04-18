@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 const Wrapper = styled.div`
   display: grid;
   grid-template-columns: 65px 1fr;
-  margin: 10px;
+  margin: 00px;
   gap: 5px;
   grid-template-rows: 100vh;
   grid-template-areas: "menu content";
