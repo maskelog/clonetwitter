@@ -53,7 +53,7 @@ const Wrapper = styled.div`
   @media (min-width: 1024px) {
     max-width: 600px;
     margin: auto;
-    min-width: 600px;
+    min-width: 720px;
   }
 `;
 

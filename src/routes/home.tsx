@@ -9,7 +9,7 @@ const Wrapper = styled.div`
   grid-template-rows: auto auto;
   overflow-x: hidden;
   width: 100%;
-  max-width: 600px;
+  max-width: auto;
   margin: 0 auto;
   padding: 0 10px;
 

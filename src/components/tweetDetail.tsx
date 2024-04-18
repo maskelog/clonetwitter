@@ -27,24 +27,21 @@ const Wrapper = styled.div`
   color: #fff;
   position: relative;
   line-height: 120%;
-  /* overflow-x: hidden; */
   width: 100%;
   box-sizing: border-box;
 
-  @media (max-width: 360px) {
-    max-width: 100%;
+  @media (max-width: 576px) {
+    padding: 20px 10px;
   }
 
-  @media (min-width: 375px) {
-    max-width: 375px;
+  @media (min-width: 577px) {
+    padding: 20px;
   }
 
   @media (min-width: 768px) {
-    max-width: 500px;
-  }
-
-  @media (min-width: 1024px) {
-    max-width: 800px;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px 40px;
   }
 `;
 
