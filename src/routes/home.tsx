@@ -7,6 +7,7 @@ const Wrapper = styled.div`
   gap: 20px;
   overflow-y: auto;
   grid-template-rows: auto auto;
+  overflow-x: hidden;
   width: 100%;
   max-width: 600px;
   margin: 0 auto;
