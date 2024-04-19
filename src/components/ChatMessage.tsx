@@ -20,18 +20,17 @@ const MessageContent = styled.div<{ isSentByCurrentUser: boolean }>`
 `;
 
 const MessageBubble = styled.div<{ isSentByCurrentUser: boolean }>`
-  background-color: ${({ isSentByCurrentUser }) =>
-    isSentByCurrentUser ? "#0B93F6" : "#262D31"};
-  color: #ececec;
+  background-color: ${({ isSentByCurrentUser, theme }) =>
+    isSentByCurrentUser ? theme.colors.primary : theme.colors.secondary};
+  color: ${(props) => props.theme.text};
   border-radius: 20px;
   padding: 10px 20px;
   margin: 0 10px;
-  /* max-width: 80%; */
 `;
 
 const Username = styled.span`
   font-size: 14px;
-  color: #adb5bd;
+  color: ${(props) => props.theme.text};
   margin: 5px 10px;
 `;
 

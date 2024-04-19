@@ -21,12 +21,20 @@ const darkTheme = {
   background: "#000000",
   text: "#FFFFFF",
   svgFill: "#FFFFFF",
+  colors: {
+    primary: "#0B93F6",
+    secondary: "#262D31",
+  },
 };
 
 const lightTheme = {
   background: "#FFFFFF",
   text: "#333333",
   svgFill: "#333333",
+  colors: {
+    primary: "#D2E3FC",
+    secondary: "#F0F0F0",
+  },
 };
 
 const GlobalStyles = createGlobalStyle`
