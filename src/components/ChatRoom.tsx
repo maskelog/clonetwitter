@@ -30,7 +30,7 @@ const ChatLayout = styled.div`
   height: 100vh;
   margin: 0 auto;
   overflow: hidden;
-  color: #fff;
+  color: ${(props) => props.theme.background};
 `;
 
 const ChatContainer = styled.div`
@@ -38,7 +38,7 @@ const ChatContainer = styled.div`
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  background-color: #f0f0f0;
+  background-color: ${(props) => props.theme.background};
   overflow: hidden;
   height: calc(100vh - 100px);
   border: 1px solid #333;
@@ -50,7 +50,7 @@ const MessagesList = styled.div`
   overflow-y: auto;
   padding: 20px;
   padding-bottom: 70px;
-  background-color: black;
+  background-color: ${(props) => props.theme.background};
   color: #fff;
   margin-bottom: auto;
 `;
@@ -58,7 +58,7 @@ const MessagesList = styled.div`
 const MessageForm = styled.form`
   display: flex;
   padding: 10px;
-  background-color: black;
+  background-color: ${(props) => props.theme.background};
   border: 1px solid #333;
   border-top: 1px solid #333;
 `;
@@ -68,7 +68,7 @@ const Input = styled.input`
   margin-right: 10px;
   padding: 10px;
   border: 1px solid #777;
-  background-color: #222;
+  background-color: ${(props) => props.theme.background};
   color: #ddd;
   border-radius: 4px;
 `;
@@ -95,7 +95,7 @@ const BackButton = styled.button`
   padding: 10px;
   font-size: 24px;
   cursor: pointer;
-  color: #fff;
+  color: ${(props) => props.theme.text};
 
   &:hover {
     color: #007bff;
