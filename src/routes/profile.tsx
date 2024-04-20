@@ -25,6 +25,7 @@ const Wrapper = styled.div`
   align-items: center;
   flex-direction: column;
   gap: 20px;
+  margin: 10px;
 `;
 
 const AvatarUpload = styled.label<AvatarUploadProps>`
